@@ -1,0 +1,8 @@
+prefix=/home/jaeshin/ISCC_2019/devel
+
+Name: serial
+Description: Description of serial
+Version: 1.2.1
+Cflags: -I/home/jaeshin/ISCC_2019/src/serial/include
+Libs: -L/home/jaeshin/ISCC_2019/devel/lib -lserial -lrt -lpthread
+Requires: 
