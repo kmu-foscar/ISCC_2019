@@ -1,3 +1,6 @@
 [submodule "src/serial"]
 	path = src/serial
 	url = https://github.com/wjwwood/serial.git
+[submodule "src/ackermann-drive-teleop"]
+	path = src/ackermann-drive-teleop
+	url = https://github.com/gkouros/ackermann-drive-teleop.git
