@@ -53,7 +53,7 @@ void serialCallback(const race::drive_values::ConstPtr& msg) {
 		front_brake = 0x33;
 		estop = 0x01;
 	}
-	steer_total = (msg->steering-100) * 28 / 100 * 71.0;
+	steer_total = ((float)(msg->steering) * 71.0 * -1);
 	printf("steer : %d , speed : %u\n", steer_total, speed_total);
 	steer_0 = steer_total >> 8;
 	steer_1 = steer_total & 0xff;
@@ -67,19 +67,19 @@ int main (int argc, char** argv) {
 
 	ros::Subscriber control_value_sub = nh.subscribe("control_value", 10, serialCallback);
 
-	try {
-		ser.setPort("/dev/ttyUSB0");
-		ser.setBaudrate(115200);
-		serial::Timeout to = serial::Timeout::simpleTimeout(1000);
-		ser.setTimeout(to);
-		ser.open();
-	} catch(serial::IOException& e) {
-		ROS_ERROR_STREAM("Unable to open port");
-		return -1;
-	}
-
-	if(ser.isOpen()) ROS_INFO_STREAM("Serial Port initialized");
-	else return -1;
+//	try {
+//		ser.setPort("/dev/ttyUSB0");
+//		ser.setBaudrate(115200);
+//		serial::Timeout to = serial::Timeout::simpleTimeout(1000);
+//		ser.setTimeout(to);
+//		ser.open();
+//	} catch(serial::IOException& e) {
+//		ROS_ERROR_STREAM("Unable to open port");
+//		return -1;
+//	}
+//
+//	if(ser.isOpen()) ROS_INFO_STREAM("Serial Port initialized");
+//	else return -1;
 
 	ros::Rate loop_rate(50);
 	size_t num_write = 14;
@@ -95,7 +95,7 @@ int main (int argc, char** argv) {
 		str[10] = front_brake;
 		str[11] = alive;
 		
-		ser.write(str, num_write);
+		//ser.write(str, num_write);
 
 		if(alive != 0xff) alive++;
 		else alive = 0x00;

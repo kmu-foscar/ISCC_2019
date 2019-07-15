@@ -142,6 +142,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/race_node.cpp)
 add_executable(write_serial_node src/write_serial.cpp)
+add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,6 +158,9 @@ add_executable(write_serial_node src/write_serial.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(ackermann_msg_to_drive_msg_node
+  ${catkin_LIBRARIES}
+)
 target_link_libraries(write_serial_node
   ${catkin_LIBRARIES}
 )
