@@ -1,8 +1,0 @@
-prefix=/home/jaeshin/ISCC_2019/install
-
-Name: race
-Description: Description of race
-Version: 0.0.0
-Cflags: -I/home/jaeshin/ISCC_2019/install/include
-Libs: -L/home/jaeshin/ISCC_2019/install/lib 
-Requires: 
