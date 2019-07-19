@@ -4,3 +4,6 @@
 [submodule "src/ackermann-drive-teleop"]
 	path = src/ackermann-drive-teleop
 	url = https://github.com/gkouros/ackermann-drive-teleop.git
+[submodule "src/razor_imu_9dof"]
+	path = src/razor_imu_9dof
+	url = https://github.com/KristofRobot/razor_imu_9dof.git
