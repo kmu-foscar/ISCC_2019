@@ -86,8 +86,9 @@ int main (int argc, char** argv) {
 	ros::Rate loop_rate(50);
 	size_t num_write = 14;
 	size_t num_read = 18;
-	std::string line;
+	
 
+	// ser.readlines(3000);
 	while(ros::ok()) {
 		str[4]  = estop;
 		str[5]  = gear;
@@ -98,10 +99,26 @@ int main (int argc, char** argv) {
 		str[10] = front_brake;
 		str[11] = alive;
 		
-		//ser.write(str, num_write);
-		ser.readline(line, num_read, '\n');
-		printf("%c %c %c %c", line[11], line[12], line[13], line[14]);
-		// encoder_value_pub.publish();
+		ser.write(str, num_write);
+
+		std::string line;
+		ser.readline(line, num_read);
+		unsigned char encoder_values[4];
+		encoder_values[0] = line[14];
+		encoder_values[1] = line[13];
+		encoder_values[2] = line[12];
+		encoder_values[3] = line[11];
+		int encoder_val = ((int)encoder_values[0] << 24) |
+                              ((int)encoder_values[1] << 16) |
+                              ((int)encoder_values[2] << 8 ) |
+                              ((int)encoder_values[3] << 0);
+
+		cout << "encoder val : " << encoder_val << endl;
+
+		std_msgs::Int32 encoder_msg;
+		encoder_msg.data = encoder_val;
+
+		encoder_value_pub.publish(encoder_msg);
 
 		if(alive != 0xff) alive++;
 		else alive = 0x00;
