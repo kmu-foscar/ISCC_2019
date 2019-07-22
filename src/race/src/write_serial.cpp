@@ -2,6 +2,7 @@
 #include <serial/serial.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Int32.h>
 #include <race/drive_values.h>
 #include <string>
 #include <stdlib.h>
@@ -66,26 +67,28 @@ int main (int argc, char** argv) {
 	ros::NodeHandle nh;
 
 	ros::Subscriber control_value_sub = nh.subscribe("control_value", 10, serialCallback);
+	ros::Publisher encoder_value_pub = nh.advertise<std_msgs::Int32>("encoder_value", 10);
 
-//	try {
-//		ser.setPort("/dev/ttyUSB0");
-//		ser.setBaudrate(115200);
-//		serial::Timeout to = serial::Timeout::simpleTimeout(1000);
-//		ser.setTimeout(to);
-//		ser.open();
-//	} catch(serial::IOException& e) {
-//		ROS_ERROR_STREAM("Unable to open port");
-//		return -1;
-//	}
-//
-//	if(ser.isOpen()) ROS_INFO_STREAM("Serial Port initialized");
-//	else return -1;
+	try {
+		ser.setPort("/dev/ttyUSB0");
+		ser.setBaudrate(115200);
+		serial::Timeout to = serial::Timeout::simpleTimeout(1000);
+		ser.setTimeout(to);
+		ser.open();
+	} catch(serial::IOException& e) {
+		ROS_ERROR_STREAM("Unable to open port");
+		return -1;
+	}
+
+	if(ser.isOpen()) ROS_INFO_STREAM("Serial Port initialized");
+	else return -1;
 
 	ros::Rate loop_rate(50);
 	size_t num_write = 14;
+	size_t num_read = 18;
+	std::string line;
 
 	while(ros::ok()) {
-		ros::spinOnce();
 		str[4]  = estop;
 		str[5]  = gear;
 		str[6]  = speed_0;
@@ -96,11 +99,15 @@ int main (int argc, char** argv) {
 		str[11] = alive;
 		
 		//ser.write(str, num_write);
+		ser.readline(line, num_read, '\n');
+		printf("%c %c %c %c", line[11], line[12], line[13], line[14]);
+		// encoder_value_pub.publish();
 
 		if(alive != 0xff) alive++;
 		else alive = 0x00;
 
 		loop_rate.sleep();
+		ros::spinOnce();
 	}
 	ser.close();
 }
