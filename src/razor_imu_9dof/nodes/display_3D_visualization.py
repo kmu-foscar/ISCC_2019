@@ -167,5 +167,5 @@ def processIMU_message(imuMsg):
             yaw_offset += -yaw
 
 
-sub = rospy.Subscriber('imu', Imu, processIMU_message)
+sub = rospy.Subscriber('imu/data', Imu, processIMU_message)
 rospy.spin()

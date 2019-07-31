@@ -55,7 +55,7 @@ def reconfig_callback(config, level):
 
 rospy.init_node("razor_node")
 #We only care about the most recent measurement, i.e. queue_size=1
-pub = rospy.Publisher('imu', Imu, queue_size=1)
+pub = rospy.Publisher('imu/data', Imu, queue_size=1)
 srv = Server(imuConfig, reconfig_callback)  # define dynamic_reconfigure callback
 diag_pub = rospy.Publisher('diagnostics', DiagnosticArray, queue_size=1)
 diag_pub_time = rospy.get_time();
@@ -155,12 +155,22 @@ rospy.sleep(5) # Sleep for 5 seconds to wait for the board to boot
 ### configure board ###
 #stop datastream
 # ser.write('#o0' + chr(13))
-ser.write('<sof1>' + chr(13))
-ser.write('<sor3>' + chr(13))
-ser.write('<soa1>' + chr(13))
-ser.write('<som1>' + chr(13))
-ser.write('<sot1>' + chr(13))
-ser.write('<sem1>' + chr(13))
+# ser.write('<sof1>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<sor3>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<soa2>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<som1>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<sem1>' + chr(13))
+# rospy.sleep(5)
+ser.write('<cz>' + chr(13))
+rospy.sleep(5)
+ser.write('<cmco>' + chr(13))
+rospy.sleep(5)
+ser.write('<cmo>' + chr(13))
+rospy.sleep(5)
 
 
 
@@ -269,9 +279,10 @@ while not rospy.is_shutdown():
         #imuMsg.linear_acceleration.y = float(words[4]) * accel_factor
         #imuMsg.linear_acceleration.z = float(words[5]) * accel_factor
 
-        imuMsg.linear_acceleration.x = float(words[3])
-        imuMsg.linear_acceleration.y = float(words[4])
-        imuMsg.linear_acceleration.z = float(words[5])
+        imuMsg.linear_acceleration.x = (math.trunc(float(words[3])*100)*0.01)*9.8
+        imuMsg.linear_acceleration.y = (math.trunc(float(words[4])*100)*0.01)*9.8
+        imuMsg.linear_acceleration.z = (math.trunc(float(words[5])*100)*0.01)*9.8
+        # imuMsg.linear_acceleration.z = float(0)
 
         rospy.loginfo(str(words[0]) + " " + str(words[1]) + " " + str(words[2]) + " " + str(words[3]) + " " + str(words[4]) + " " + str(words[5]) + " " + str(words[6]) + " " + str(words[7]) + " " + str(words[8]))
 
