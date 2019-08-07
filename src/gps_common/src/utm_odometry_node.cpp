@@ -45,8 +45,8 @@ void callback(const sensor_msgs::NavSatFixConstPtr& fix) {
     else
       odom.header.frame_id = frame_id;
 
-  	odom.header.frame_id = "base_link";
-    odom.child_frame_id = child_frame_id;
+  	odom.header.frame_id = "map";
+    odom.child_frame_id = "base_link";
 
     odom.pose.pose.position.x = easting;
     odom.pose.pose.position.y = northing;
@@ -81,7 +81,7 @@ void callback(const sensor_msgs::NavSatFixConstPtr& fix) {
     odom_pub.publish(odom);
     
     geometry_msgs::TransformStamped tf;
-    tf.header.frame_id = "odom";
+    tf.header.frame_id = "map";
     tf.child_frame_id = "base_link";
     tf.header.stamp = ros::Time::now();
     tf.transform.translation.x = easting;
