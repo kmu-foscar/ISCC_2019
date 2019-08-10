@@ -29,5 +29,8 @@ sudo apt install ros-kinetic-bfl
 
 sudo apt install python-visual
 
+cd ~/ISCC_2019
+catkin_make
+
 echo "source ~/ISCC_2019/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
