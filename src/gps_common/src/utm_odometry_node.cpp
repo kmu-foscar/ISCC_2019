@@ -45,7 +45,7 @@ void callback(const sensor_msgs::NavSatFixConstPtr& fix) {
     else
       odom.header.frame_id = frame_id;
 
-  	odom.header.frame_id = "map";
+    odom.header.frame_id = "map";
     odom.child_frame_id = "base_link";
 
     odom.pose.pose.position.x = easting;
@@ -103,7 +103,7 @@ int main (int argc, char **argv) {
 
   odom_pub = node.advertise<nav_msgs::Odometry>("odom", 10);
 
-  ros::Subscriber fix_sub = node.subscribe("fix", 10, callback);
+  ros::Subscriber fix_sub = node.subscribe("gps/fix", 10, callback);
   tf_pub_.reset(new tf::TransformBroadcaster);
 
   ros::spin();

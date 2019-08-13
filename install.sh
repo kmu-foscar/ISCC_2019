@@ -27,8 +27,22 @@ sudo apt -y install ros-kinetic-geometry-msgs
 sudo apt -y install ros-kinetic-geographic-msgs
 sudo apt -y install ros-kinetic-bfl
 
+# For gps_goal package
+sudo apt -y install ros-kinetic-move-base-msgs
+sudo apt -y install ros-kinetic-click
+sudo apt -y install ros-kinetic-swri-transform-util
+
+# For move_base package
+sudo apt -y install ros-kinetic-base-local-planner 
+sudo apt -y install ros-kinetic-clear-costmap-recovery 
+sudo apt -y install ros-kinetic-cmake-modules 
+sudo apt -y install ros-kinetic-navfn
+sudo apt -y install ros-kinetic-rotate-recovery 
+
 
 sudo apt -y install python-visual
+
+sudo pip install geographiclib
 
 cd ~/ISCC_2019/ && catkin_make
 
