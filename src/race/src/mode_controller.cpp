@@ -4,15 +4,15 @@
 #include <race/mode.h>
 
 
-void traffic_sign_callback(std_msgs::Int8 msg) {
+void traffic_sign_callback(std_msgs::Int8 msg) { // 표지판 메세지 콜백 함수
 
 }
 
-void traffic_light_callback(std_msgs::Int8 msg) {
+void traffic_light_callback(std_msgs::Int8 msg) { // 신호등 메세지 콜백 함수
     
 }
 
-void odom_calback(nav_msgs::Odometry msg) {
+void odom_callback(nav_msgs::Odometry msg) { // Odom 메세지 콜백 함수
 
 }
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 mode msg
   status
 0 : 정지
-1 : 진행
+1 : 진행 
    mode
 0 : 기본 주행
 1 : 좌회전
