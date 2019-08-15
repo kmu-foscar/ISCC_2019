@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   geometry_msgs
   serial
+  nav_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -58,6 +60,9 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   drive_values.msg
+  test.msg
+  enc_values.msg
+  mode.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -137,12 +142,17 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+
+
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/race_node.cpp)
-add_executable(write_serial_node src/write_serial.cpp)
+add_executable(serial_control_node src/serial_control.cpp)
 add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cpp)
+add_executable(mode_controller_node src/mode_controller.cpp)
+
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,9 +160,17 @@ add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cp
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 # set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
 
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(ackermann_msg_to_drive_msg_node
+#  race_generate_messages_cpp
+#)
+#add_dependencies(serial_control_node
+#  race_generate_messages_cpp
+#)
+
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -161,9 +179,13 @@ add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cp
 target_link_libraries(ackermann_msg_to_drive_msg_node
   ${catkin_LIBRARIES}
 )
-target_link_libraries(write_serial_node
+target_link_libraries(serial_control_node
   ${catkin_LIBRARIES}
 )
+target_link_libraries(mode_controller_node
+  ${catkin_LIBRARIES}
+)
+
 
 #############
 ## Install ##
