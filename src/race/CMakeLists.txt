@@ -63,6 +63,7 @@ add_message_files(
   test.msg
   enc_values.msg
   mode.msg
+  lane_info.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -151,6 +152,7 @@ include_directories(
 add_executable(serial_control_node src/serial_control.cpp)
 add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cpp)
 add_executable(mode_controller_node src/mode_controller.cpp)
+add_executable(central_controller_node src/central_controller.cpp)
 
 
 
@@ -185,7 +187,9 @@ target_link_libraries(serial_control_node
 target_link_libraries(mode_controller_node
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(central_controller_node
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##

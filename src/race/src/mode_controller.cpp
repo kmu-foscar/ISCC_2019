@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
     ros::Subscriber odom_sub = nh.subscribe("odom", 1, odom_callback);
     ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
 
+    ros::spin();
     return 0;
 }
 
