@@ -1,5 +1,6 @@
 # Sample NMEA parameter configuration
-
+rate: 30
+frame_id: gps
 nmea:
   set: true
   version: 65
