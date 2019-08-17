@@ -4,22 +4,33 @@
 #include <race/mode.h>
 #include <race/drive_values.h>
 
+bool is_lane_detected = false;
 
-void odom_callback(nav_msgs::Odometry msg) {
+Point path[1000];
+
+void odom_callback(const nav_msgs::Odometry::ConstPtr& msg) {
+	if(is_lane_detected) {
+
+	}
+
+	vec = path[index] - Point(msg->pose.x, msg->pose.y)
+
+	
 
 }
 
-void lane_info_callback(race::lane_info msg) {
+void lane_info_callback(const race::lane_info::ConstPtr& msg) {
 
 }
 
-void mode_callback(race::mode msg) {
+void mode_callback(const race::mode::ConstPtr& msg) {
 
 }
 
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "central_controller_node");
+    // To Do 초기 Odometry 설정
 
     ros::Subscriber odom_sub = nh.subscribe("odom", 1, odom_callback);
     ros::Subscriber lane_info_sub = nh.subscribe("lane_info", 1, lane_info_callback);
