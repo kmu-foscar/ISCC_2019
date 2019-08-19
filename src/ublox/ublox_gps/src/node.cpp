@@ -31,6 +31,7 @@
 #include <cmath>
 #include <string>
 #include <sstream>
+#include <std_msgs/Int16>
 
 using namespace ublox_node;
 
@@ -724,6 +725,13 @@ void UbloxFirmware6::callbackNavPosLlh(const ublox_msgs::NavPOSLLH& m) {
   // Position message
   static ros::Publisher fixPublisher =
       nh->advertise<sensor_msgs::NavSatFix>("fix", kROSQueueSize);
+  
+  
+  // Azimuth info test
+  ros::Publisher azim_pub = nh->advertise<std_msgs::Int16>("azim", 1);
+  azim_pub.publish(m.azim);
+
+
   if (m.iTOW == last_nav_vel_.iTOW)
     fix_.header.stamp = velocity_.header.stamp; // use last timestamp
   else
