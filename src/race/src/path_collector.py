@@ -4,6 +4,9 @@ import rospy
 
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Int8
+from os.path import expanduser
+
+file_directory = expanduser("~/ISCC_2019/src/race/src/path.txt")
 
 
 location = []
@@ -15,7 +18,8 @@ def odom_callback(msg):
 
 def key_callback(msg):
 	global location
-	with open("path.txt", 'a') as f:
+	print(file_directory)
+	with open(file_directory, 'a') as f:
 		f.write(str(location[0]) + ' ' + str(location[1]) + '\n')
 		print(location)
 
