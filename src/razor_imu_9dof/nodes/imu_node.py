@@ -270,7 +270,10 @@ while not rospy.is_shutdown():
             yaw_deg = yaw_deg - 360.0
         if yaw_deg < -180.0:
             yaw_deg = yaw_deg + 360.0
-        yaw = yaw_deg #*degrees2rad
+        yaw = yaw_deg *degrees2rad
+        imu_yaw = Float64()
+        imu_yaw.data = yaw_deg
+        yaw_pub.publish(imu_yaw)
         #in AHRS firmware y axis points right, in ROS y axis points left (see REP 103)
 
         # Publish message
@@ -300,10 +303,6 @@ while not rospy.is_shutdown():
         #in AHRS firmware z axis points down, in ROS z axis points up (see REP 103)
         imuMsg.angular_velocity.z = -float(words[8])
         #imuMsg.angular_velocity.z = float(words[2])
-
-    imu_yaw = Float64()
-    imu_yaw.data = yaw
-    yaw_pub.publish(imu_yaw)
 
     q = quaternion_from_euler(roll,pitch,yaw)
     imuMsg.orientation.x = q[0]

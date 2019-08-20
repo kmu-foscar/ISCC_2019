@@ -29,6 +29,7 @@ bool is_path_set = false;
 Point current_position;
 bool is_lane_detected = false;
 double yaw = 0.0;
+ros::Publisher drive_msg_pub;
 
 float cal_distance(const Point A, const Point B) {
     return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
@@ -68,7 +69,8 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     }
 
     if(mode == BASE && is_path_set) {
-
+        int steer, throttle=10;
+	
     }
 
 }
@@ -94,7 +96,7 @@ int main(int argc, char** argv) {
     ros::Subscriber imu_sub = nh.subscribe("imu/yaw", 1, imu_callback);
     ros::Subscriber lane_info_sub = nh.subscribe("lane_info", 1, lane_info_callback);
     ros::Subscriber mode_sub = nh.subscribe("mode", 1, mode_callback);
-    ros::Publisher drive_msg_pub = nh.advertise<race::drive_values>("control_value", 1);
+    drive_msg_pub = nh.advertise<race::drive_values>("control_value", 1);
 
     // To Do 초기 Odometry 설정
 
