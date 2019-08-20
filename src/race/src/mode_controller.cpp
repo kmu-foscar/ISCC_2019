@@ -12,12 +12,13 @@ void traffic_light_callback(std_msgs::Int8 msg) { // 신호등 메세지 콜백 
     
 }
 
-void odom_callback(nav_msgs::Odometry msg) { // Odom 메세지 콜백 함수
+void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) { // Odom 메세지 콜백 함수
 
 }
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "mode_controller_node");
+    ros::NodeHandle nh;
 
     ros::Subscriber traffic_sign_sub = nh.subscribe("traffic_sign", 1, traffic_sign_callback);
     ros::Subscriber traffic_light_sub = nh.subscribe("traffic_light", 1, traffic_light_callback);

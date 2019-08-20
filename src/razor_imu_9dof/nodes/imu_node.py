@@ -40,6 +40,7 @@ from tf.transformations import quaternion_from_euler
 from dynamic_reconfigure.server import Server
 from razor_imu_9dof.cfg import imuConfig
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
+from std_msgs.msg import Float64
 
 degrees2rad = math.pi/180.0
 imu_yaw_calibration = 0.0
@@ -59,6 +60,7 @@ pub = rospy.Publisher('imu/data', Imu, queue_size=1)
 srv = Server(imuConfig, reconfig_callback)  # define dynamic_reconfigure callback
 diag_pub = rospy.Publisher('diagnostics', DiagnosticArray, queue_size=1)
 diag_pub_time = rospy.get_time();
+yaw_pub = rospy.Publisher('imu/yaw', Float64, queue_size=1)
 
 imuMsg = Imu()
 
@@ -165,12 +167,12 @@ rospy.sleep(5) # Sleep for 5 seconds to wait for the board to boot
 # rospy.sleep(5)
 # ser.write('<sem1>' + chr(13))
 # rospy.sleep(5)
-ser.write('<cz>' + chr(13))
-rospy.sleep(5)
-ser.write('<cmco>' + chr(13))
-rospy.sleep(5)
-ser.write('<cmo>' + chr(13))
-rospy.sleep(5)
+# ser.write('<cz>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<cmco>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<cmo>' + chr(13))
+# rospy.sleep(5)
 
 
 
@@ -268,7 +270,7 @@ while not rospy.is_shutdown():
             yaw_deg = yaw_deg - 360.0
         if yaw_deg < -180.0:
             yaw_deg = yaw_deg + 360.0
-        yaw = yaw_deg*degrees2rad
+        yaw = yaw_deg #*degrees2rad
         #in AHRS firmware y axis points right, in ROS y axis points left (see REP 103)
 
         # Publish message
@@ -279,9 +281,9 @@ while not rospy.is_shutdown():
         #imuMsg.linear_acceleration.y = float(words[4]) * accel_factor
         #imuMsg.linear_acceleration.z = float(words[5]) * accel_factor
 
-        imuMsg.linear_acceleration.x = (math.trunc(float(words[3])*100)*0.01)*9.8
-        imuMsg.linear_acceleration.y = (math.trunc(float(words[4])*100)*0.01)*9.8
-        imuMsg.linear_acceleration.z = (math.trunc(float(words[5])*100)*0.01)*9.8
+        imuMsg.linear_acceleration.x = float(words[3])*9.8
+        imuMsg.linear_acceleration.y = float(words[4])*9.8
+        imuMsg.linear_acceleration.z = float(words[5])*9.8
         # imuMsg.linear_acceleration.z = float(0)
 
         rospy.loginfo(str(words[0]) + " " + str(words[1]) + " " + str(words[2]) + " " + str(words[3]) + " " + str(words[4]) + " " + str(words[5]) + " " + str(words[6]) + " " + str(words[7]) + " " + str(words[8]))
@@ -298,6 +300,10 @@ while not rospy.is_shutdown():
         #in AHRS firmware z axis points down, in ROS z axis points up (see REP 103)
         imuMsg.angular_velocity.z = -float(words[8])
         #imuMsg.angular_velocity.z = float(words[2])
+
+    imu_yaw = Float64()
+    imu_yaw.data = yaw
+    yaw_pub.publish(imu_yaw)
 
     q = quaternion_from_euler(roll,pitch,yaw)
     imuMsg.orientation.x = q[0]
