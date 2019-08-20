@@ -31,14 +31,16 @@ bool is_lane_detected = false;
 double yaw = 0.0;
 ros::Publisher drive_msg_pub;
 
-float cal_distance(const Point A, const Point B) {
+double cal_distance(const Point A, const Point B) {
     return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
+}
+
+int getAngle(std::vector<Point> v1, std::vector<Point> v2) {
+
 }
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-
-
     std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path.txt");
     std::string line;
 
@@ -69,8 +71,21 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     }
 
     if(mode == BASE && is_path_set) {
-        int steer, throttle=10;
-	
+        int steering, throttle=10;
+        std::vector<Point> v1, v2;
+        v1.push_back(current_position);
+        v1.push_back(Point(current_position.x+cos(yaw), current_position.y+sin(yaw)));
+        v2.push_back(current_position);
+        v2.push_back(path[current_path_index]);
+        steering = getAngle(v1, v2);
+        
+        race::drive_values drive_msg;
+        drive_msg.throttle = throttle;
+        drive_msg.steering = steering;
+
+        ROS_INFO("steering : %d", steering);
+
+        drive_msg_pub.publish(drive_msg);
     }
 
 }
