@@ -39,7 +39,7 @@ sudo apt -y install ros-kinetic-cmake-modules
 sudo apt -y install ros-kinetic-navfn
 sudo apt -y install ros-kinetic-rotate-recovery 
 
-
+sudo apt -y install libarmadillo-dev
 sudo apt -y install python-visual
 
 sudo pip install geographiclib

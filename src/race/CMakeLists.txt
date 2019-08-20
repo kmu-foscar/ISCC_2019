@@ -166,13 +166,18 @@ add_executable(central_controller_node src/central_controller.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#add_dependencies(ackermann_msg_to_drive_msg_node
-#  race_generate_messages_cpp
-#)
-#add_dependencies(serial_control_node
-#  race_generate_messages_cpp
-#)
-
+add_dependencies(ackermann_msg_to_drive_msg_node
+  race_generate_messages_cpp
+)
+add_dependencies(serial_control_node
+  race_generate_messages_cpp
+)
+add_dependencies(mode_controller_node
+  race_generate_messages_cpp
+)
+add_dependencies(central_controller_node
+  race_generate_messages_cpp
+)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
