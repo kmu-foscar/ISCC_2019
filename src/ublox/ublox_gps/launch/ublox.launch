@@ -16,4 +16,10 @@
     <rosparam command="load" 
               file="$(find ublox_gps)/config/$(arg param_file_name).yaml" />
   </node>
+
+  <node pkg="gps_common" type="utm_odometry_node" name="utm_odometry_node">
+  </node>
+
+  <node pkg="race" type="path_collector.py" name="path_collector">
+  </node>
 </launch>

@@ -8,19 +8,20 @@
 #include <cstring>
 #include <iostream>
 #include <std_msgs/Float64.h>
+#include <cmath>
 
 
 struct Point {
-    int x;
-    int y;
-    Point() {}
-    Point(int _x, int _y) : x(_x), y(_y) {}
+    float x;
+    float y;
+    Point() {x = 0; y = 0;}
+    Point(float _x, float _y) : x(_x), y(_y) {}
 };
 
 enum { BASE, };
 
 int mode = BASE;
-int path_index = 0;
+int current_path_index = 0;
 std::vector<int> a;
 std::vector<Point> path;
 bool is_path_set = false;
@@ -28,17 +29,27 @@ Point current_position;
 bool is_lane_detected = false;
 float yaw = 0.0;
 
+float cal_distance(const Point A, const Point B) {
+    return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
+}
+
 void set_path() {
     std::ifstream infile("path.txt");
     std::string line;
+    
+    float min_dis = 9999999;
 
     while(std::getline(infile, line)) {
         std::istringstream iss(line);
         int x, y;
         if(!(iss >> x >> y)) break;
+        path.push_back(Point(x, y));
+        if(min_dis > cal_distance(path.back(), current_position)) {
+            current_path_index = path.size()-1;
+        }
 
     }
-    ROS_INFO("path is set");
+    ROS_INFO("path initialized, index : %d, position : %f %f", current_path_index, current_position.x, current_position.y);
     is_path_set = true;
 }
 
