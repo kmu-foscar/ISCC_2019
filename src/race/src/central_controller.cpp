@@ -105,8 +105,10 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     }
     if(cal_distance(current_position, path[current_path_index]) < 1.0) current_path_index++;
 
-    prev_position.x = current_position.x;
-    prev_position.y = current_position.y;
+    if(cal_distance(current_position, prev_position) > 0.3) {
+        prev_position.x = current_position.x;
+        prev_position.y = current_position.y;
+    }
 }
 
 void imu_callback(const std_msgs::Float64::ConstPtr& msg) {
