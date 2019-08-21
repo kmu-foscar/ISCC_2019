@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include "sensor_msgs/LaserScan.h"
 #include <cstdlib>
+#include <iostream>
 
 
 #define MIN_SCAN_ANGLE_RAD  -70.0/180*M_PI
@@ -17,19 +18,37 @@ bool isdetected = false;
 
 void obstacleCB(const sensor_msgs::LaserScan::ConstPtr& laser) {
 
-    int minIndex = ceil((MIN_SCAN_ANGLE_RAD - laser->angle_min) / laser->angle_increment);
-	int maxIndex = floor((MAX_SCAN_ANGLE_RAD - laser->angle_min) / laser->angle_increment);
-	int midIndex = (minIndex + maxIndex) / 2;
+    int minIndex = 90;
+	int maxIndex = 290;
 
-	float closestRange_left = laser->ranges[minIndex];
-	float closestRange_right = laser->ranges[midIndex];
+    cout << laser->ranges.size() << endl;
+    if(!isdetected) {
+	    for(int currIndex = minIndex + 1; currIndex < maxIndex; currIndex++){
 
-	for(int currIndex = minIndex + 1; currIndex < maxIndex; currIndex++){
-		if(laser->ranges[currIndex] < dist){
-			isdetected = true;
-            break;
-		}
+            if(laser->ranges[currIndex] < dist){
+			    isdetected = true;
+                ROS_INFO_STREAM("Stop Sign"    );
+                break;
+		    }
+        }
+       
 	}
+    else {
+        int currIndex;
+
+        for(currIndex = minIndex + 1; currIndex < maxIndex; currIndex++){
+		
+            if(laser->ranges[currIndex] < dist){
+			   
+                break;
+		    }
+        }
+        if(currIndex >= maxIndex) {
+            isdetected = false;
+            ROS_INFO_STREAM("Go Sign"   );
+        }
+    }
+    
 
 
 
@@ -38,8 +57,8 @@ void obstacleCB(const sensor_msgs::LaserScan::ConstPtr& laser) {
 int main(int argc, char** argv) {
     ros::init(argc,argv,"dynamic_obstacle");
     ros::NodeHandle nh;
-
-    float dist = (float)atoi(argv[1]);
+    
+    dist = (float)atoi(argv[1]);
 
     obstacle_sub = nh.subscribe("/scan", 10, obstacleCB);
 
