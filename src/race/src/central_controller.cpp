@@ -47,8 +47,8 @@ float getAngle(std::vector<Point> v1, std::vector<Point> v2) {
     y1 = v1[1].y - v1[0].y;
     x2 = v2[1].x - v2[0].x;
     y2 = v2[1].y - v2[0].y;
-    std::cout << x1 << ' ' << y1 << ' ' << x2 << ' ' << y2 << std::endl;
-    return asin((x1*y2-y1*x2)/(cal_distance(v1[0], v1[1]))*(cal_distance(v2[0], v2[1]))) * 180.0 / M_PI;
+    // std::cout << x1 << ' ' << y1 << ' ' << x2 << ' ' << y2 << std::endl;
+    return asin((x1*y2-y1*x2)/((cal_distance(v1[0], v1[1])*(cal_distance(v2[0], v2[1]))))) * 180.0 / M_PI;
 
 }
 
@@ -70,6 +70,7 @@ void set_path() {
         }
     }
     ROS_INFO("path initialized, index : %d, position : %f %f", current_path_index, current_position.x, current_position.y);
+    
     is_path_set = true;
 }
 
@@ -103,9 +104,10 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 
         drive_msg_pub.publish(drive_msg);
     }
-    if(cal_distance(current_position, path[current_path_index]) < 1.0) current_path_index++;
+    std::cout << "a " << current_path_index << ' ' << cal_distance(current_position, prev_position) << std::endl;
+    if(cal_distance(current_position, path[current_path_index]) < 5.0) current_path_index++;
 
-    if(cal_distance(current_position, prev_position) > 0.3) {
+    if(cal_distance(current_position, prev_position) > 2.5) {
         prev_position.x = current_position.x;
         prev_position.y = current_position.y;
     }
