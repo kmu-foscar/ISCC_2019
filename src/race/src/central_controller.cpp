@@ -13,17 +13,18 @@
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
-
+#include <mutex>
 
 
 struct Point {
-    double x;
-    double y;
+    float x;
+    float y;
     Point() {x = 0; y = 0;}
-    Point(double _x, double _y) : x(_x), y(_y) {}
+    Point(float _x, float _y) : x(_x), y(_y) {}
 };
 
 enum { BASE, };
+
 
 int mode = BASE;
 int current_path_index = 0;
@@ -31,10 +32,10 @@ std::vector<Point> path;
 bool is_path_set = false;
 Point current_position;
 bool is_lane_detected = false;
-double yaw = 0.0;
+float yaw = 0.0;
 ros::Publisher drive_msg_pub;
 
-double cal_distance(const Point A, const Point B) {
+float cal_distance(const Point A, const Point B) {
     return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
 }
 
@@ -44,7 +45,7 @@ float getAngle(std::vector<Point> v1, std::vector<Point> v2) {
     y1 = v1[1].y - v1[0].y;
     x2 = v2[1].x - v2[0].x;
     y2 = v2[1].y - v2[0].y;
-
+    std::cout << x1 << ' ' << y1 << ' ' << x2 << ' ' << y2 << std::endl;
     return asin((x1*y2-y1*x2)/(cal_distance(v1[0], v1[1])));
 
 }
@@ -54,13 +55,13 @@ void set_path() {
     std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path.txt");
     std::string line;
 
-    double min_dis = 9999999;
-    double x, y;
+    float min_dis = 9999999;
+    float x, y;
     while(infile >> x >> y) {
         path.push_back(Point(x, y));
         std::cout.precision(11);
 	std::cout << std::fixed << path.back().x << ' ' << path.back().y << std::endl;
-	double cur_dis = cal_distance(path.back(), current_position);
+	float cur_dis = cal_distance(path.back(), current_position);
         if(min_dis > cur_dis) {
 	    min_dis = cur_dis;
             current_path_index = path.size()-1;
@@ -81,7 +82,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     }
 
     if(mode == BASE && is_path_set) {
-        int steering, throttle=10;
+        float steering, throttle=10;
         std::vector<Point> v1, v2;
         v1.push_back(current_position);
         v1.push_back(Point(current_position.x+cos(yaw), current_position.y+sin(yaw)));
@@ -90,18 +91,24 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         steering = getAngle(v1, v2);
         
         race::drive_values drive_msg;
-        drive_msg.throttle = throttle;
-        drive_msg.steering = steering;
+        drive_msg.throttle = (int)throttle;
+        drive_msg.steering = (int)steering;
 
-        ROS_INFO("steering : %d", steering);
+        // ROS_INFO("steering : %f", steering);
+        std::cout << steering << std::endl;
 
         drive_msg_pub.publish(drive_msg);
     }
+    if(cal_distance(current_position, path[current_path_index])) current_path_index++;
 
 }
 
 void heading_callback(const std_msgs::Int32::ConstPtr& heading) {
-    yaw = heading->data/10000.0;
+    std::mutex mtx_lock;
+    mtx_lock.lock();
+    yaw = (float)heading->data/100000.0;
+    std::cout << yaw << std::endl;
+    mtx_lock.unlock();
 }
 
 void imu_callback(const std_msgs::Float64::ConstPtr& msg) {
@@ -123,7 +130,7 @@ int main(int argc, char** argv) {
 
     ros::Subscriber odom_sub = nh.subscribe("odom", 1, odom_callback);
     ros::Subscriber imu_sub = nh.subscribe("imu/yaw", 1, imu_callback);
-    ros::Subscriber heading_sub = nh.subscribe("heading", 1, heading_callback);
+    ros::Subscriber heading_sub = nh.subscribe("gps/heading", 1, heading_callback);
     ros::Subscriber lane_info_sub = nh.subscribe("lane_info", 1, lane_info_callback);
     ros::Subscriber mode_sub = nh.subscribe("mode", 1, mode_callback);
     drive_msg_pub = nh.advertise<race::drive_values>("control_value", 1);
