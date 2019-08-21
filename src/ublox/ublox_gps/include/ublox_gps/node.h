@@ -49,7 +49,7 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/TimeReference.h>
 #include <sensor_msgs/Imu.h>
-#include <std_msgs/Int32.h>
+#include <std_msgs/UInt32.h>
 // Other U-Blox package includes
 #include <ublox_msgs/ublox_msgs.h>
 // Ublox GPS includes
@@ -773,9 +773,9 @@ class UbloxFirmware7Plus : public UbloxFirmware {
       //                                                         kROSQueueSize);
       // publisher.publish(m);
       
-    static ros::Publisher heading_pub = nh->advertise<std_msgs::Int32>("heading", kROSQueueSize);
-    std_msgs::Int32 temp;
-    temp.data = m.heading;
+    static ros::Publisher heading_pub = nh->advertise<std_msgs::UInt32>("heading", kROSQueueSize);
+    std_msgs::UInt32 temp;
+    temp.data = m.headAcc;
     heading_pub.publish(temp);
     // }
 
