@@ -1,13 +1,16 @@
 #include <ros/ros.h>
+
 #include <race/lane_info.h>
 #include <nav_msgs/Odometry.h>
 #include <race/mode.h>
 #include <race/drive_values.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/Int32.h>
+
 #include <vector>
 #include <fstream>
 #include <cstring>
 #include <iostream>
-#include <std_msgs/Float64.h>
 #include <cmath>
 #include <cstdlib>
 
@@ -35,7 +38,14 @@ double cal_distance(const Point A, const Point B) {
     return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
 }
 
-int getAngle(std::vector<Point> v1, std::vector<Point> v2) {
+float getAngle(std::vector<Point> v1, std::vector<Point> v2) {
+    float x1, y1, x2, y2;
+    x1 = v1[1].x - v1[0].x;
+    y1 = v1[1].y - v1[0].y;
+    x2 = v2[1].x - v2[0].x;
+    y2 = v2[1].y - v2[0].y;
+
+    return asin((x1*y2-y1*x2)/(cal_distance(v1[0], v1[1])));
 
 }
 
@@ -90,6 +100,10 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 
 }
 
+void heading_callback(const std_msgs::Int32::ConstPtr& heading) {
+    yaw = heading->data/10000.0;
+}
+
 void imu_callback(const std_msgs::Float64::ConstPtr& msg) {
     yaw = msg->data;
 }
@@ -109,6 +123,7 @@ int main(int argc, char** argv) {
 
     ros::Subscriber odom_sub = nh.subscribe("odom", 1, odom_callback);
     ros::Subscriber imu_sub = nh.subscribe("imu/yaw", 1, imu_callback);
+    ros::Subscriber heading_sub = nh.subscribe("heading", 1, heading_callback);
     ros::Subscriber lane_info_sub = nh.subscribe("lane_info", 1, lane_info_callback);
     ros::Subscriber mode_sub = nh.subscribe("mode", 1, mode_callback);
     drive_msg_pub = nh.advertise<race::drive_values>("control_value", 1);

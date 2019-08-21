@@ -49,6 +49,7 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/TimeReference.h>
 #include <sensor_msgs/Imu.h>
+#include <std_msgs/Int32.h>
 // Other U-Blox package includes
 #include <ublox_msgs/ublox_msgs.h>
 // Ublox GPS includes
@@ -765,12 +766,18 @@ class UbloxFirmware7Plus : public UbloxFirmware {
    * @param m the message to publish
    */
   void callbackNavPvt(const NavPVT& m) {
-    if(enabled["nav_pvt"]) {
+    // if(enabled["nav_pvt"]) {
+    // if(true){
       // NavPVT publisher
-      static ros::Publisher publisher = nh->advertise<NavPVT>("navpvt",
-                                                              kROSQueueSize);
-      publisher.publish(m);
-    }
+      // static ros::Publisher publisher = nh->advertise<NavPVT>("navpvt",
+      //                                                         kROSQueueSize);
+      // publisher.publish(m);
+      
+    static ros::Publisher heading_pub = nh->advertise<std_msgs::Int32>("heading", kROSQueueSize);
+    std_msgs::Int32 temp;
+    temp.data = m.heading;
+    heading_pub.publish(temp);
+    // }
 
     //
     // NavSatFix message
