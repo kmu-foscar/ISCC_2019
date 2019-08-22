@@ -18,6 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+find_package(OpenCV REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -131,6 +133,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -153,7 +156,7 @@ add_executable(serial_control_node src/serial_control.cpp)
 add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cpp)
 add_executable(mode_controller_node src/mode_controller.cpp)
 add_executable(central_controller_node src/central_controller.cpp)
-
+add_executable(lane_detector_node src/lane_detector.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -178,6 +181,9 @@ add_dependencies(mode_controller_node
 add_dependencies(central_controller_node
   race_generate_messages_cpp
 )
+add_dependencies(lane_detector_node
+  race_generate_messages_cpp
+)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -195,6 +201,11 @@ target_link_libraries(mode_controller_node
 target_link_libraries(central_controller_node
   ${catkin_LIBRARIES}
 )
+target_link_libraries(lane_detector_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+
 
 #############
 ## Install ##
