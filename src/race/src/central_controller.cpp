@@ -79,8 +79,6 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     current_position.x = odom->pose.pose.position.x;
     current_position.y = odom->pose.pose.position.y;
 
-    // float yaw = 
-    
     if(!is_path_set) {
         set_path();
     }
@@ -104,7 +102,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 
         drive_msg_pub.publish(drive_msg);
     }
-    std::cout << "a " << current_path_index << ' ' << cal_distance(current_position, prev_position) << std::endl;
+    std::cout << current_path_index << ' ' << cal_distance(current_position, prev_position) << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < 5.0) current_path_index++;
 
     if(cal_distance(current_position, prev_position) > 2.5) {

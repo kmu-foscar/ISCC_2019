@@ -48,3 +48,7 @@ cd ~/ISCC_2019/ && catkin_make
 
 echo "source ~/ISCC_2019/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
+
+sudo su
+echo -e SUBSYSTEM=="tty", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", SYMLINK+="ttyGPS1"\\nSUBSYSTEM=="tty", ATTRS{serial}=="0001", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="ttyIMU" > /etc/udev/rules.d/99-usb-serial.rules
+exit
