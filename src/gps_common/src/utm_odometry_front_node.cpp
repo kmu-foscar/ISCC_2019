@@ -93,7 +93,7 @@ void callback(const sensor_msgs::NavSatFixConstPtr& fix) {
 }
 
 int main (int argc, char **argv) {
-  ros::init(argc, argv, "utm_odometry_node");
+  ros::init(argc, argv, "utm_odometry_front_node");
   ros::NodeHandle node;
   ros::NodeHandle priv_node("~");
 
@@ -101,9 +101,9 @@ int main (int argc, char **argv) {
   priv_node.param<std::string>("child_frame_id", child_frame_id, "");
   priv_node.param<double>("rot_covariance", rot_cov, 99999.0);
 
-  odom_pub = node.advertise<nav_msgs::Odometry>("odom", 10);
+  odom_pub = node.advertise<nav_msgs::Odometry>("odom_front", 10);
 
-  ros::Subscriber fix_sub = node.subscribe("gps/fix", 10, callback);
+  ros::Subscriber fix_sub = node.subscribe("gps_front/fix", 10, callback);
   tf_pub_.reset(new tf::TransformBroadcaster);
 
   ros::spin();

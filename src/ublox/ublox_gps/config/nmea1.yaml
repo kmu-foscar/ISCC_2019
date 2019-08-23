@@ -1,6 +1,7 @@
 # Sample NMEA parameter configuration
-rate: 30
-frame_id: gps
+rate: 20
+frame_id: gps_front
+device: /dev/ttyACM0
 nmea:
   set: true
   version: 65

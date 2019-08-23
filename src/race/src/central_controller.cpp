@@ -51,12 +51,12 @@ float getAngle(std::vector<Point> v1, std::vector<Point> v2) {
     x2 = v2[1].x - v2[0].x;
     y2 = v2[1].y - v2[0].y;
 
-    float u1 = sqrt(x1*x1 + y1*y1);
-    float u2 = sqrt(x2*x2 + y2*y2);
-    x1 /= u1;
-    y1 /= u1;
-    x2 /= u2;
-    y2 /= u2;
+    // float u1 = sqrt(x1*x1 + y1*y1);
+    // float u2 = sqrt(x2*x2 + y2*y2);
+    // x1 /= u1;
+    // y1 /= u1;
+    // x2 /= u2;
+    // y2 /= u2;
 
     // std::cout << x1 << ' ' << y1 << ' ' << x2 << ' ' << y2 << std::endl;
     return asin((x1*y2-y1*x2)/((cal_distance(v1[0], v1[1])*(cal_distance(v2[0], v2[1]))))) * 180.0 / M_PI;
