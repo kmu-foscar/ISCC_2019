@@ -53,13 +53,13 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles) 
 		{final_point.y}
 	};
 	
-	xy = mat*xy;
+	// xy = mat*xy;
 	
-	if(obstacles->circles.size() > 0)
-		std::cout << xy.x + gps_car.x << ' ' << xy.y + gps_car.y << std::endl;
-	else {
-		std::cout << "not found" << std::endl;
-	}
+	//if(obstacles->circles.size() > 0)
+	//	std::cout << xy.x + gps_car.x << ' ' << xy.y + gps_car.y << std::endl;
+	//else {
+	//	std::cout << "not found" << std::endl;
+	//}
 }
 
 int main(int argc, char** argv) {
