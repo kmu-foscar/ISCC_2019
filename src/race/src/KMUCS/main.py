@@ -63,6 +63,7 @@ def main():
     while True:
         ret, img = cap.read()
         img1, x_location = process_image(img)
+        cv2.imshow('origin', img)
         cv2.imshow('result', img1)
           # print pid
         if cv2.waitKey(1) & 0xFF == ord('q'):
