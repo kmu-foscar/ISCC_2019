@@ -8,10 +8,10 @@
 #include <std_msgs/Int8.h>
 #include <std_msgs/UInt8.h>
 #include <nav_msgs/Odometry.h>
-#include "race/mode.h"
+#include <race/mode.h>
 
-std_msgs::Int8 pstatus;
-std_msgs::Int8 pmode;
+race::mode pstatus;
+race::mode pmode;
 
 /* 미션 목록
  * 
@@ -27,6 +27,7 @@ std_msgs::Int8 pmode;
  * 10.주차
  */
 int mission_num = 0;
+bool traffic_light_detect = false;
 
 void traffic_sign_callback(std_msgs::UInt8 msg) { // 표지판 메세지 콜백 함수
     // 1. 어린이보호구역, 제한속도 30
@@ -46,14 +47,14 @@ void traffic_light_callback(std_msgs::UInt8 msg) { // 신호등 메세지 콜백
     // 청,좌회전 0011
     // 적,좌회전 1010
     if(tl_flag.data == 3 || tl_flag.data == 10) {
-        pstatus.data = 1;
+        pstatus.status = 1;
     }
 
     // 황,적신호 1100
     // 적신호    1000
     // 황신호    0100
     else {
-        pstatus.data = 0;
+        pstatus.status = 0;
     }
 }
 
@@ -65,8 +66,8 @@ void odom_callback(nav_msgs::Odometry msg) { // Odom 메세지 콜백 함수
 int main(int argc, char** argv) {
     ros::init(argc, argv, "mode_controller_node");
 
-    pstatus.data = 1;
-    pmode.data = 0;
+    pstatus.status = 1;
+    pmode.mode = 0;
 
     ros::NodeHandle nh;
     race::mode m;
@@ -78,7 +79,7 @@ int main(int argc, char** argv) {
     ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
 
     // TODO 표지판, 신호등, 차선 정보 가공
-    if(pstatus.data) {
+    if(pstatus.status) {
         if(mission_num == 4 || mission_num == 8 || mission_num == 9) {
             m.mode = 0;
         }
@@ -101,7 +102,7 @@ int main(int argc, char** argv) {
     }
 
     // mode 발행
-    m.status = pstatus.data;
+    m.status = pstatus.status;
     mode_pub.publish(m);
 
     ros::spin();
