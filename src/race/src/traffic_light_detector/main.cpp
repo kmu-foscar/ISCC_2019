@@ -9,22 +9,6 @@
 using namespace cv;
 using namespace std;
 
-
-const int GREEN_1 = 70;
-const int GREEN_2 = 100;
-const int GREEN_3 = 180;
-const int GREEN_4 = 250;
-
-const int YELLOW_1 = 10;
-const int YELLOW_2 = 50;
-const int YELLOW_3 = 80;
-const int YELLOW_4 = 250;
-
-const int RED_1 = 160;
-const int RED_2 = 180;
-const int RED_3 = 180;
-const int RED_4 = 250;
-
 const Vec3b HSV_RED_LOWER = Vec3b(0, 100, 100);
 const Vec3b HSV_RED_UPPER = Vec3b(10, 255, 255);
 const Vec3b HSV_RED_LOWER1 = Vec3b(160, 100, 100);
@@ -44,7 +28,7 @@ const int MIN_SIZE = 30;
 const int MAX_HEIGHT = 50;
 const int MIN_HEIGHT = 10;
 
-bool use_roi = true;
+bool use_roi = false;
 
 struct TrafficLight {
     int left;
@@ -65,48 +49,6 @@ struct TrafficLight {
 };
 
 //ros::NodeHandler nh;
-
-void detectHScolor(const cv::Mat& image, double minHue, double maxHue, double minSat, double maxSat, cv::Mat& mask){
-
-    cv::Mat hsv;
-
-    cv::cvtColor(image, hsv, cv::COLOR_BGR2HSV);
-
-    std::vector<cv::Mat> channels;
-
-    cv::split(hsv, channels); //HSV 채널 분리
-
-    //Hue 마스크 (0~255)
-
-    cv::Mat mask1;
-
-    cv::threshold(channels[0], mask1, maxHue, 255, cv::THRESH_BINARY_INV);
-
-    cv::Mat mask2;
-
-    cv::threshold(channels[0], mask2, minHue, 255, cv::THRESH_BINARY);
-
-    cv::Mat hueMask;
-
-    if(minHue<maxHue) hueMask = mask1 & mask2;
-
-    else hueMask = mask1 | mask2;
-
-    cv::threshold(channels[1], mask1, maxSat, 255, cv::THRESH_BINARY_INV);
-
-    cv::threshold(channels[1], mask2, minSat, 255, cv::THRESH_BINARY);
-
-
-
-    cv::Mat satMask;
-
-    satMask = mask1 & mask2;
-
-
-    mask = hueMask & satMask;
-
-}
-
 bool isTrafficLight(TrafficLight t) {
 
     return false;
@@ -203,7 +145,11 @@ int getGrayColor(Mat &img, int x, int y) {
 
 int main(int argc, char** argv) {
 //    ros::init(argc, argv, "traffic_light_node");
-    VideoCapture cap("yellow.mov");
+    // VideoCapture cap("yellow.mov");
+    // VideoCapture cap("yellow.mov");
+    VideoCapture cap(1);
+
+
     if (!cap.isOpened()) return -1;
 
 
@@ -213,9 +159,15 @@ int main(int argc, char** argv) {
         Mat img;
         cap >> img;
 
+        int rows = img.rows;
+        int cols = img.cols;
+
+
+        imshow("imggggggggggg", img);
+
         // 관심영역 설정 (set ROI (X, Y, W, H)).
 
-        Rect rect((1920-1920/2)/2, 0, 1920/2, 600);
+        Rect rect(0, 0, cols, rows/2);
         // 관심영역 자르기 (Crop ROI).
 
         Mat subImage = img(rect);
@@ -500,9 +452,9 @@ int main(int argc, char** argv) {
         }
 
         imshow("img", img);
-        waitKey(0);
-        // if (waitKey(5) >= 0)
-        //     break;
+        // waitKey(0);
+        if (waitKey(5) >= 0)
+            break;
     }
 
 }
