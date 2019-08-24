@@ -64,7 +64,7 @@ model.fit(data, labels)
 print(model)
 print("[INFO] evaluating...")
 
-cap = cv2.VideoCapture(0);
+cap = cv2.VideoCapture(1);
 
 while True:
 	ret, img = cap.read();
@@ -114,10 +114,10 @@ while True:
 		area = cv2.contourArea(cnt)
 		print(area)
 		# 면적이 2000이상이고 가로/세로 비율이 0.6~1.4인 후보군을 bounding해준다.
-		if area > 2000.0 :
+		if area > 5000.0 and area > 2000.0 :
 			x, y, w, h = cv2.boundingRect(cnt)
 			rate = w / h
-			if rate > 0.6 and rate < 1.4 :
+			if rate > 0.8 and rate < 1.2 :
 				cv2.rectangle(img, (x, y), (x+w, y+h), (200, 152, 50), 2)
 				inputImage = gray[y:y+h, x:x+w]
 				# kernel = np.ones((1, 1), np.uint8)
