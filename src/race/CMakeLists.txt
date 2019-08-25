@@ -157,6 +157,7 @@ add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cp
 add_executable(mode_controller_node src/mode_controller.cpp)
 add_executable(central_controller_node src/central_controller.cpp)
 add_executable(lane_detector_node src/lane_detector.cpp)
+add_executable(central_controller_node2 src/central_controller2.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -184,7 +185,9 @@ add_dependencies(central_controller_node
 add_dependencies(lane_detector_node
   race_generate_messages_cpp
 )
-
+add_dependencies(central_controller_node2
+  race_generate_messages_cpp
+)
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -204,6 +207,9 @@ target_link_libraries(central_controller_node
 target_link_libraries(lane_detector_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
+)
+target_link_libraries(central_controller_node2
+  ${catkin_LIBRARIES}
 )
 
 

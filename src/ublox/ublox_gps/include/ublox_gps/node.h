@@ -49,7 +49,7 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/TimeReference.h>
 #include <sensor_msgs/Imu.h>
-#include <std_msgs/UInt32.h>
+#include <std_msgs/Float32.h>
 // Other U-Blox package includes
 #include <ublox_msgs/ublox_msgs.h>
 // Ublox GPS includes
@@ -773,10 +773,10 @@ class UbloxFirmware7Plus : public UbloxFirmware {
       //                                                         kROSQueueSize);
       // publisher.publish(m);
       
-    static ros::Publisher heading_pub = nh->advertise<std_msgs::UInt32>("heading", kROSQueueSize);
-    std_msgs::UInt32 temp;
-    temp.data = m.headAcc;
-    heading_pub.publish(temp);
+    // static ros::Publisher heading_pub = nh->advertise<std_msgs::Float32>("heading", kROSQueueSize);
+    // std_msgs::Float32 temp;
+    // temp.data = -m.heading/100000 - 90;
+    // heading_pub.publish(temp);
     // }
 
     //
@@ -810,7 +810,9 @@ class UbloxFirmware7Plus : public UbloxFirmware {
     // Set the LLA
     fix.latitude = m.lat * 1e-7; // to deg
     fix.longitude = m.lon * 1e-7; // to deg
-    fix.altitude = m.height * 1e-3; // to [m]
+    // fix.altitude = m.height * 1e-3; // to [m]
+    fix.altitude = -(m.heading/100000)-90;
+
     // Set the Fix status
     bool fixOk = m.flags & m.FLAGS_GNSS_FIX_OK;
     if (fixOk && m.fixType >= m.FIX_TYPE_2D) {
