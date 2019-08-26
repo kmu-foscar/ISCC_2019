@@ -45,14 +45,13 @@ def auto_drive(pid):
     else:
         car_run_speed -= 0.003 * 10
 
-    ack_msg = AckermannDriveStamped()
-    ack_msg.header.stamp = rospy.Time.now()
-    ack_msg.header.frame_id = ''
-    ack_msg.drive.steering_angle = pid
-    ack_msg.drive.speed = car_run_speed
-    ack_publisher.publish(ack_msg)
-    # print 'speed: '
-    # print car_run_speed
+    # ack_msg = AckermannDriveStamped()
+    # ack_msg.header.stamp = rospy.Time.now()
+    # ack_msg.header.frame_id = ''
+    # ack_msg.drive.steering_angle = pid
+    # ack_msg.drive.speed = car_run_speed
+    # ack_publisher.publish(ack_msg)
+    print('speed: ', car_run_speed)
 
 def main():
 
@@ -64,7 +63,11 @@ def main():
         ret, img = cap.read()
         img1, x_location = process_image(img)
         cv2.imshow('result', img1)
-          # print pid
+        if x_location != None:
+            pid = round(pidcal.pid_control(int(x_location)), 6)
+            print(pid)
+            auto_drive(pid)
+            # print pid
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
