@@ -13,7 +13,7 @@ gmap3 = gmplot.GoogleMapPlotter(0, 0, 2)
 def cb(msg):
 	global gmap3
 	gmap3.plot(lat, lon, 'cornflowerblue', edge_width = 3.0)
-	gmap3.draw('test3.html')
+	gmap3.draw('test4.html')
 
 def gps_subscriber_callback(msg):
 	global lat, lon
@@ -22,7 +22,7 @@ def gps_subscriber_callback(msg):
 	lon.append(msg.longitude)
 
 rospy.init_node('gps_plot')
-rospy.Subscriber("/fix", NavSatFix, gps_subscriber_callback)
+rospy.Subscriber("gps_front/fix", NavSatFix, gps_subscriber_callback)
 rospy.Subscriber("/asdf", Int32, cb)
 
 rospy.spin()

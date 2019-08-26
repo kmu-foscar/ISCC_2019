@@ -6,7 +6,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Int8
 from os.path import expanduser
 
-file_directory = expanduser("~/ISCC_2019/src/race/src/path5.txt")
+file_directory = expanduser("~/ISCC_2019/src/race/src/path6.txt")
 
 
 location = []
@@ -26,7 +26,7 @@ def key_callback(msg):
 
 rospy.init_node('path_collector')
 
-odom_sub = rospy.Subscriber("odom", Odometry, odom_callback)
+odom_sub = rospy.Subscriber("odom_front", Odometry, odom_callback)
 key_sub = rospy.Subscriber("key", Int8, key_callback)
 
 rospy.spin()

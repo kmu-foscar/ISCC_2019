@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
-  <arg name="node_name" default="gps_rear"/>
+  <arg name="node_name" default="gps_front"/>
   <arg name="param_file_name" doc="name of param file, e.g. rover" default="nmea1"/>
   <arg name="output" default="screen" />
   <arg name="respawn" default="true" />
