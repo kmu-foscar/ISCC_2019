@@ -120,12 +120,15 @@ def processIMU_message(imuMsg):
     pitch=0
     yaw=0
 
-    quaternion = (
-      imuMsg.orientation.x,
-      imuMsg.orientation.y,
-      imuMsg.orientation.z,
-      imuMsg.orientation.w)
-    (roll,pitch,yaw) = euler_from_quaternion(quaternion)
+    #quaternion = (
+    #  imuMsg.orientation.x,
+    #  imuMsg.orientation.y,
+    #  imuMsg.orientation.z,
+    #  imuMsg.orientation.w)
+    #(roll,pitch,yaw) = euler_from_quaternion(quaternion)
+    roll = imuMsg.orientation.x*math.pi/180.0
+    pitch = imuMsg.orientation.y*math.pi/180.0
+    yaw = imuMsg.orientation.z*math.pi/180.0
 
     #add align offset to yaw
     yaw += yaw_offset

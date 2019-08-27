@@ -157,7 +157,7 @@ rospy.sleep(5) # Sleep for 5 seconds to wait for the board to boot
 ### configure board ###
 #stop datastream
 # ser.write('#o0' + chr(13))
-# ser.write('<sof1>' + chr(13))
+ser.write('<sof1>' + chr(13))
 # rospy.sleep(5)
 # ser.write('<sor3>' + chr(13))
 # rospy.sleep(5)
@@ -259,9 +259,9 @@ while not rospy.is_shutdown():
     #f.write(line)                     # Write to the output log file
     words = string.split(line[1:-1],",")    # Fields split
     if len(words) > 2:
-        imuMsg.orientation.x = float(words[3])
+        imuMsg.orientation.x = float(words[1])
         imuMsg.orientation.y = float(words[2])
-        imuMsg.orientation.z = float(words[1])
+        imuMsg.orientation.z = -float(words[3])
         imuMsg.orientation.w = float(words[4])
         imuMsg.header.stamp= rospy.Time.now()
         imuMsg.header.frame_id = 'base_imu_link'
