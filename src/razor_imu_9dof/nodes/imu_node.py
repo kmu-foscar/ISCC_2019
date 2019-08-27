@@ -261,7 +261,7 @@ while not rospy.is_shutdown():
     if len(words) > 2:
         imuMsg.orientation.x = float(words[1])
         imuMsg.orientation.y = float(words[2])
-        imuMsg.orientation.z = -float(words[3])
+        imuMsg.orientation.z = float(words[3])
         imuMsg.orientation.w = float(words[4])
         imuMsg.header.stamp= rospy.Time.now()
         imuMsg.header.frame_id = 'base_imu_link'

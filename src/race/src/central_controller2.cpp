@@ -6,6 +6,7 @@
 #include <race/drive_values.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
+#include <sensor_msgs/Imu.h>
 
 #include <vector>
 #include <fstream>
@@ -73,7 +74,7 @@ double getAngle(std::vector<Point> v1, std::vector<Point> v2) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path6.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path9.txt");
     std::string line;
 
     float min_dis = 9999999;
@@ -96,6 +97,10 @@ void set_path() {
     is_path_set = true;
 }
 
+void imu_callback(const sensor_msgs::Imu::ConstPtr& msg) {
+    yaw = msg->orientation.z;
+}
+
 
 void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     current_position.x = odom->pose.pose.position.x;
@@ -110,18 +115,20 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         double steering, throttle=5;
         std::vector<Point> v1, v2;
 
-        Point center_point;
+        Point center_point; //(0,0)
         Point temp;
-        temp.x = 1*cos(front_heading);
-        temp.y = 1*sin(front_heading);
-
+        // temp.x = 1*cos(front_heading);
+        // temp.y = 1*sin(front_heading);
+        temp.x = 1*cos((yaw+90)*3.141592/180.0);
+        temp.y = 1*sin((yaw+90)*3.141592/180.0);
+	std::cout << yaw << std::endl;
         // steering 계산 부분
         v1.push_back(center_point);
         v1.push_back(temp);
         v2.push_back(current_position);
         v2.push_back(path[current_path_index]);
 
-        std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
+        // std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
 
         steering = getAngle(v1, v2);
         
@@ -129,23 +136,18 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         race::drive_values drive_msg;
         
         if(steering >= 28) steering = 28;
-	    if(steering <= -28) steering = -28;
+	if(steering <= -28) steering = -28;
         
         drive_msg.throttle = (int)throttle;
         drive_msg.steering = (int)(steering*-1);
         
         // ROS_INFO("steering : %f", steering);
-        // std::cout << "steering : " << steering << std::endl;
+        std::cout << "steering : " << steering << std::endl;
 
         drive_msg_pub.publish(drive_msg);
     }
-    std::cout << current_path_index << ' ' << cal_distance(current_position, rear_position) << std::endl;
+    std::cout << current_path_index << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
-    if(cal_distance(current_position, prev_position) > yaw_refresh_threshold) {
-        prev_position.x = current_position.x;
-        prev_position.y = current_position.y;
-    }
-
 }
 
 void odom_rear_callback(const nav_msgs::Odometry::ConstPtr& odom) {
@@ -171,6 +173,7 @@ int main(int argc, char** argv) {
     ros::Subscriber odom_rear_sub = nh.subscribe("odom_rear", 1, odom_rear_callback);
     ros::Subscriber lane_info_sub = nh.subscribe("lane_info", 1, lane_info_callback);
     ros::Subscriber mode_sub = nh.subscribe("mode", 1, mode_callback);
+    ros::Subscriber imu_sub = nh.subscribe("imu/data", 1, imu_callback);
     drive_msg_pub = nh.advertise<race::drive_values>("control_value", 1);
 
     ros::spin();
