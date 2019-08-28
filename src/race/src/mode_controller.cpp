@@ -1,6 +1,6 @@
-/* 2019-08-23 금요일
+/* 2019-08-28 금요일
  * 20153155 김다훈
- * 
+ * 20153183 박호준
  * mode_controller.cpp 예선
  */
 
@@ -12,9 +12,20 @@
 
 std_msgs::Int8 pstatus;
 std_msgs::Int8 pmode;
+std_msgs::Int8 pspd_limit;
+
+struct Point {
+    float x;
+    float y;
+    Point() {x = 0; y = 0;}
+    Point(float _x, float _y) : x(_x), y(_y) {}
+};
+
+Point current_position;
+int mission_num = 0; // 예선전 미션 숫자 목록 저장 변수
 
 /* 미션 목록
- * 
+ * 0. 일반주행
  * 1. 교차로 좌회전
  * 2. 정적 장애물(드럼통)
  * 3. 교차로 우회전
@@ -26,12 +37,40 @@ std_msgs::Int8 pmode;
  * 9. 교차로 직진
  * 10.주차
  */
-int mission_num = 0;
-bool traffic_sign_detect = false;
+
+
+
 
 void traffic_sign_callback(std_msgs::UInt8 msg) { // 표지판 메세지 콜백 함수
-    // 1. 어린이보호구역, 제한속도 30
-    // 2. 주차
+
+    std_msgs::UInt8 ts_flag;
+    //ts_flag.data = 0b00001111;
+    //ts_flag.data = ts_flag.data & msg.data;
+    ts_flag.data = 0;
+    ts_flag.data = msg.data;
+
+    // 1. 주차 0001 or 1 
+    // 2. 어린이보호구역, 제한속도 30     0010 or 2
+    // 3, 감속문턱사인   0011 or 3 
+
+    if(ts_flag.data == 1){          //어린이 보호구역 간판 사인         
+        pspd_limit.data = 30;
+   }
+        
+    else if(ts_flag.data == 2){          // 주차미션 간판 사인
+        mission_num = 10;
+   }
+
+    else if(ts_flag.data == 3){          //감속문턱 간판 사인
+       //감속 필요에 따라
+        pspd_limit.data = 30;
+    }
+    
+    else{
+        pspd_limit.data = 50;               //-> 기본 제한 속도
+     }
+
+
 }
 
 /* 청신호 000X
@@ -44,10 +83,25 @@ void traffic_light_callback(std_msgs::UInt8 msg) { // 신호등 메세지 콜백
     tl_flag.data = 0b00001111;
     tl_flag.data = tl_flag.data & msg.data;
 
-    // 청,좌회전 0011
-    // 적,좌회전 1010
-    if(tl_flag.data == 3 || tl_flag.data == 10) {
+    if(tl_flag.data == 1) { //청신호 0001
+        
         pstatus.data = 1;
+
+    }
+
+
+    else if(tl_flag.data == 3) { //청, 좌회전 0011
+        
+        pstatus.data = 1;
+        mission_num = 7;
+
+    }
+
+    else if(tl_flag.data == 10){ //적, 좌회전 1010
+
+        pstatus.data = 1;
+        mission_num = 7;
+
     }
 
     // 황,적신호 1100
@@ -60,7 +114,28 @@ void traffic_light_callback(std_msgs::UInt8 msg) { // 신호등 메세지 콜백
 
 void odom_callback(nav_msgs::Odometry msg) { // Odom 메세지 콜백 함수
     // Odom에서 진행중인 미션의 완료를 판단
-    // 좌표..?
+/* 미션 목록
+ * 0. 일반주행
+ * 1. 교차로 좌회전
+ * 2. 정적 장애물(드럼통)
+ * 3. 교차로 우회전
+ * 4. 교차로 직진(신호등)
+ * 5. 교차로 좌회전
+ * 6. 돌발 장애물/일시정지
+ * 7. 교차로 좌회전(신호등)
+ * 8. 교차로 직진(신호등)
+ * 9. 교차로 직진
+ * 10.주차
+ */
+    
+
+    current_position.x = msg.pose.pose.position.x;
+    current_position.y = msg.pose.pose.position.y;
+
+
+/* 미션 */
+
+
 }
 
 int main(int argc, char** argv) {
@@ -83,7 +158,7 @@ int main(int argc, char** argv) {
         if(mission_num == 4 || mission_num == 8 || mission_num == 9) {
             m.mode = 0;
         }
-        else if(mission_num == 1 || mission_num == 5 || mission_num == 7) {
+        else if(mission_num == 0 || mission_num == 1 || mission_num == 5 || mission_num == 7) {
             m.mode = 1;
         }
         else if(mission_num == 3) {
@@ -103,6 +178,7 @@ int main(int argc, char** argv) {
 
     // mode 발행
     m.status = pstatus.data;
+    m.spd_limit = pspd_limit.data;
     mode_pub.publish(m);
 
     ros::spin();
