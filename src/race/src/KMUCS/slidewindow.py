@@ -15,6 +15,7 @@ class SlideWindow:
 
         x_location = None
         # init out_img, height, width
+
         out_img = np.dstack((img, img, img)) * 255
         height = img.shape[0]
         width = img.shape[1]
@@ -28,20 +29,21 @@ class SlideWindow:
         #print nonzero
         nonzeroy = np.array(nonzero[0])
         nonzerox = np.array(nonzero[1])
-        #print nonzerox
+
+        # print(nonzerox)
         # init data need to sliding windows
-        margin = 20
+        margin = 30
         minpix = 10
         left_lane_inds = []
         right_lane_inds = []
 
         # first location and segmenation location finder
         # draw line
-
-        # 여기서 초록색 파란색 영역 설정하는거임
-        pts_left = np.array([[width/2 - 130, height], [width/2 - 130, height - 60], [width/2 -250, height - 80], [width/2 - 250, height]], np.int32)
+        # 120 120,60 180,80, 180
+        pts_left = np.array([[width/2 - 120, height], [width/2 - 120, height - 60], [width/2 - 260, height - 80], [width/2 - 260, height]], np.int32)
         cv2.polylines(out_img, [pts_left], False, (0,255,0), 1)
-        pts_right = np.array([[width/2 + 57, height], [width/2 + 57, height - 80], [width/2 + 120, height - 110], [width/2 + 120, height]], np.int32)
+
+        pts_right = np.array([[width/2 + 220, height], [width/2 + 220, height - 80], [width/2 + 320, height - 110], [width/2 + 320, height]], np.int32)
         cv2.polylines(out_img, [pts_right], False, (255,0,0), 1)
         #pts_center = np.array([[width/2 + 90, height], [width/2 + 90, height - 150], [width/2 - 60, height - 231], [width/2 - 60, height]], np.int32)
         #cv2.polylines(out_img, [pts_center], False, (0,0,255), 1)
@@ -49,8 +51,13 @@ class SlideWindow:
         cv2.polylines(out_img, [pts_catch], False, (0,120,120), 1)
 
         # indicies before start line(the region of pts_left)
-        good_left_inds = ((nonzerox >= width/2 - 130) & (nonzeroy >= nonzerox * 0.33 + 337) & (nonzerox <= width/2 - 70)).nonzero()[0]
-        good_right_inds = ((nonzerox >= width/2 + 57) & (nonzeroy >= nonzerox * (-0.48) + 580) & (nonzerox <= width/2 + 120)).nonzero()[0]
+        # nonzerox * 0.33 +
+        # 130 337 70
+        good_left_inds = ((nonzerox >= width/2 - 300) & (nonzeroy >=  350 - nonzerox * 0.33 ) & (nonzerox <= width/2 - 110)).nonzero()[0]
+        good_right_inds = ((nonzerox >= width/2 + 130) & (nonzeroy >= nonzerox * (-0.33) + 350) & (nonzerox <= width/2 + 200)).nonzero()[0]
+
+        # print(type(good_left_inds))
+        # print("good_left_inds", good_right_inds)
 
         # left line exist, lefty current init
         line_exist_flag = None
@@ -58,6 +65,7 @@ class SlideWindow:
         x_current = None
         good_center_inds = None
         p_cut = None
+
 
         # check the minpix before left start line
         # if minpix is enough on left, draw left, then draw right depends on left
@@ -80,13 +88,21 @@ class SlideWindow:
         #    if nonzeroy[good_center_inds] != [] and nonzerox[good_center_inds] != []:
         #        p_cut = np.polyfit(nonzeroy[good_center_inds], nonzerox[good_center_inds], 2)
 
+        print("x_current : ", x_current)
+
+        if x_current is None:
+            cv2.waitKey(10)
+
         if line_flag != 3:
             # it's just for visualization of the valid inds in the region
             for i in range(len(good_left_inds)):
                     img = cv2.circle(out_img, (nonzerox[good_left_inds[i]], nonzeroy[good_left_inds[i]]), 1, (0,255,0), -1)
-            # window sliding and draw
+            #
+            # for i in range(len(good_right_inds)):
+            #         img = cv2.circle(out_img, (nonzerox[good_right_inds[i]], nonzeroy[good_right_inds[i]]), 1, (0,0,255), -1)            # window sliding and draw
             for window in range(0, nwindows):
                 if line_flag == 1:
+                    # print("left good")
                     # rectangle x,y range init
                     win_y_low = y_current - (window + 1) * window_height
                     win_y_high = y_current - (window) * window_height
@@ -95,7 +111,7 @@ class SlideWindow:
                     # draw rectangle
                     # 0.33 is for width of the road
                     cv2.rectangle(out_img, (win_x_low, win_y_low), (win_x_high, win_y_high), (0, 255, 0), 1)
-                    cv2.rectangle(out_img, (win_x_low + int(width * 0.33), win_y_low), (win_x_high + int(width * 0.33), win_y_high), (255, 0, 0), 1)
+                    cv2.rectangle(out_img, (win_x_low + int(width * 0.50), win_y_low), (win_x_high + int(width * 0.50), win_y_high), (255, 0, 0), 1)
                     # indicies of dots in nonzerox in one square
                     good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_x_low) & (nonzerox < win_x_high)).nonzero()[0]
                     # check num of indicies in square and put next location to current
@@ -106,7 +122,7 @@ class SlideWindow:
                         p_left = np.polyfit(nonzeroy[left_lane_inds], nonzerox[left_lane_inds], 2)
                         x_current = np.int(np.polyval(p_left, win_y_high))
                     # 338~344 is for recognize line which is yellow line in processed image(you can check in imshow)
-                    if win_y_low >= 338 and win_y_low < 344:
+                    if win_y_low >= 108 and win_y_low < 504:
                     # 0.165 is the half of the road(0.33)
                         x_location = x_current + int(width * 0.175)
                 else: # change line from left to right above(if)
@@ -114,7 +130,7 @@ class SlideWindow:
                     win_y_high = y_current - (window) * window_height
                     win_x_low = x_current - margin
                     win_x_high = x_current + margin
-                    cv2.rectangle(out_img, (win_x_low - int(width * 0.33), win_y_low), (win_x_high - int(width * 0.33), win_y_high), (0, 255, 0), 1)
+                    cv2.rectangle(out_img, (win_x_low - int(width * 0.50), win_y_low), (win_x_high - int(width * 0.50), win_y_high), (0, 255, 0), 1)
                     cv2.rectangle(out_img, (win_x_low, win_y_low), (win_x_high, win_y_high), (255, 0, 0), 1)
                     good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_x_low) & (nonzerox < win_x_high)).nonzero()[0]
                     if len(good_right_inds) > minpix:
