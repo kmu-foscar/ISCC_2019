@@ -7,11 +7,11 @@ class PidCal:
     def __init__(self):
         # print "init PidCal"
         self.x = 0
-    def cal_error(self, setpoint=318):
+    def cal_error(self, setpoint=400):
         return setpoint - self.x
 
     # twiddle is for optimize the kp,ki,kd
-    def twiddle(self, setpoint=318):
+    def twiddle(self, setpoint=400):
         best_err = self.cal_error()
         #threshold = 0.001
         #threshold = 1e-09
@@ -43,7 +43,7 @@ class PidCal:
 
     # setpoint is the center and the x_current is where the car is
     # width = 640, so 320 is the center but 318 is more accurate in real
-    def pid_control(self, x_current, setpoint=318):
+    def pid_control(self, x_current, setpoint=400):
         # print "HHHHHHHHHHHHHHH"
         # print x_current
         self.x = int(x_current)
@@ -56,7 +56,7 @@ class PidCal:
         d1 = round(self.p[2] * (error -  self.error_old), 9)
         self.error_old = error
         pid = p1 + i1 + d1
-        #print("p : " ,p)
-        #print("i : " ,i)
-        #print("d : " ,d)
+        # print("p : " ,p)
+        # print("i : " ,i)
+        # print("d : " ,d)
         return pid

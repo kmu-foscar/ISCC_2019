@@ -56,7 +56,7 @@ class PidCal:
         d1 = round(self.p[2] * (error -  self.error_old), 9)
         self.error_old = error
         pid = p1 + i1 + d1
-        #print("p : " ,p)
-        #print("i : " ,i)
-        #print("d : " ,d)
+        # print("p : " ,p)
+        # print("i : " ,i)
+        # print("d : " ,d)
         return pid

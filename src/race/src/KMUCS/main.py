@@ -45,25 +45,30 @@ def auto_drive(pid):
     else:
         car_run_speed -= 0.003 * 10
 
-    ack_msg = AckermannDriveStamped()
-    ack_msg.header.stamp = rospy.Time.now()
-    ack_msg.header.frame_id = ''
-    ack_msg.drive.steering_angle = pid
-    ack_msg.drive.speed = car_run_speed
-    ack_publisher.publish(ack_msg)
-    # print 'speed: '
-    # print car_run_speed
+    drive_value = drive_values()
+    drive_value.throttle = int(3)
+    drive_value.steering = (pid/0.074)
+    
+    drive_values_pub.publish(drive_value)
+    print('steer: ', drive_value.steering)
+    print('speed: ', car_run_speed)
 
 def main():
 
     # cap = cv2.VideoCapture(0);
-    cap = cv2.VideoCapture("TEST14.avi")
-    # cap = cv2.VideoCapture("for_lane1.avi")
-
+    # cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture("TEST.avi")
+    # cap.set(CV_CAP_PROP_FRAME_WIDTH,800)
+    # cap.set(CV_CAP_PROP_FRAME_HEIGHT,448)
+    cap.set(3,800)
+    cap.set(4,448)
 
     while True:
         ret, img = cap.read()
         img1, x_location = process_image(img)
+        if x_location != None:
+            pid = round(pidcal.pid_control(int(x_location)), 6)
+            auto_drive(pid)
         cv2.imshow('result', img1)
         # print (pid)
         if cv2.waitKey(1) & 0xFF == ord('q'):
