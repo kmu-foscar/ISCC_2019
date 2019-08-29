@@ -119,9 +119,9 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         Point temp;
         // temp.x = 1*cos(front_heading);
         // temp.y = 1*sin(front_heading);
-        temp.x = 1*cos((yaw+90)*3.141592/180.0);
-        temp.y = 1*sin((yaw+90)*3.141592/180.0);
-	std::cout << yaw << std::endl;
+        temp.x = 1*cos((-yaw+90)*3.141592/180.0);
+        temp.y = 1*sin((-yaw+90)*3.141592/180.0);
+	std::cout << "temp" << temp.x << ' ' << temp.y << std::endl;
         // steering 계산 부분
         v1.push_back(center_point);
         v1.push_back(temp);

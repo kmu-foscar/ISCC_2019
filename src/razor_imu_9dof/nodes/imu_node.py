@@ -268,6 +268,7 @@ while not rospy.is_shutdown():
         imuMsg.header.seq = seq
         seq = seq + 1
         pub.publish(imuMsg)
+        print(-float(words[3])+90)
 
 ser.close
 #f.close
