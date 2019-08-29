@@ -28,7 +28,7 @@ struct Point {
 enum { BASE, };
 
 
-double path_arrived_threshold = 2.0;
+double path_arrived_threshold = 2.5;
 double yaw_refresh_threshold = 1.0;
 
 
@@ -74,7 +74,7 @@ double getAngle(std::vector<Point> v1, std::vector<Point> v2) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/path100.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/path_pension.txt");
     std::string line;
 
     float min_dis = 9999999;
@@ -121,7 +121,8 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // temp.y = 1*sin(front_heading);
         temp.x = 1*cos((-yaw+90)*3.141592/180.0);
         temp.y = 1*sin((-yaw+90)*3.141592/180.0);
-	std::cout << "temp" << temp.x << ' ' << temp.y << std::endl;
+	    std::cout << "temp : " << temp.x << ' ' << temp.y << std::endl;
+        std::cout << "yaw : " << -yaw+90 << std::endl;
         // steering 계산 부분
         v1.push_back(center_point);
         v1.push_back(temp);
