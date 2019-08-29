@@ -74,7 +74,7 @@ double getAngle(std::vector<Point> v1, std::vector<Point> v2) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path100.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/path100.txt");
     std::string line;
 
     float min_dis = 9999999;
