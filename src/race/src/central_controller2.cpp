@@ -7,6 +7,8 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
 #include <sensor_msgs/Imu.h>
+#include <obstacle_detector/Obstacles.h>
+#include <geometry_msgs/Point.h>
 
 #include <vector>
 #include <fstream>
@@ -48,6 +50,8 @@ Point prev_position;
 float front_heading = 0.0;
 float rear_heading = 0.0;
 
+double steering, throttle=5;
+
 
 double cal_distance(const Point A, const Point B) {
     return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
@@ -70,6 +74,13 @@ double getAngle(std::vector<Point> v1, std::vector<Point> v2) {
     // std::cout << x1 << ' ' << y1 << ' ' << x2 << ' ' << y2 << std::endl;
     return asin((x1*y2+x2*y1)/(cal_distance(v2[0], v2[1]))) * 180.0 / M_PI;
 
+}
+
+bool operator<(geometry_msgs::Point A, geometry_msgs::Point B) {
+    if(A.x == B.x) {
+        return A.y < B.y;
+    }
+    return A.x < B.x;
 }
 
 void set_path() {
@@ -112,7 +123,6 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     }
 
     if(mode == BASE && is_path_set) {
-        double steering, throttle=5;
         std::vector<Point> v1, v2;
 
         Point center_point; //(0,0)
@@ -145,11 +155,53 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         drive_msg_pub.publish(drive_msg);
     } else if(mode == STATIC_OBSTACLE_1) {
 
+
+
+        race::drive_values drive_msg;
+
+        drive_msg.throttle = (int)throttle;
+        drive_msg.steering = (steering);
+        
+        // ROS_INFO("steering : %f", steering);
+        std::cout << "steering : " << drive_msg.steering << std::endl;
+
+        drive_msg_pub.publish(drive_msg);
     } else if(mode == STATIC_OBSTACLE_2){
 
     }
     std::cout << current_path_index << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
+}
+
+void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& msg) {
+    geometry_msgs::Point target_point;
+    target_point.x = 100000;
+    target_point.y = 100000;
+    target_point.z = 0;
+
+    for(int i = 0 ; i < msg->circles.size() ; i++) {
+        if(msg->circles[i].center < target_point) {
+            target_point = msg->circles[i].center;
+        }    
+    }
+    
+    Point center_point;
+    Point y_axis;
+    Point circle;
+
+    y_axis.y = 1;
+    circle.x = target_point.x;
+    circle.y = target_point.y;
+
+    std::vector<Point> v1, v2;
+    v1.push_back(center_point);
+    v1.push_back(y_axis);
+    v2.push_back(center_point);
+    v2.push_back(circle);
+
+    double angle = getAngle(v1, v2);
+
+    steering = -angle-5;
 }
 
 void odom_rear_callback(const nav_msgs::Odometry::ConstPtr& odom) {
@@ -176,6 +228,7 @@ int main(int argc, char** argv) {
     ros::Subscriber lane_info_sub = nh.subscribe("lane_info", 1, lane_info_callback);
     ros::Subscriber mode_sub = nh.subscribe("mode", 1, mode_callback);
     ros::Subscriber imu_sub = nh.subscribe("imu/data", 1, imu_callback);
+    ros::Subscriber obstacle_sub = nh.subscribe("obstacles", 1, obstacle_callback);
     drive_msg_pub = nh.advertise<race::drive_values>("control_value", 1);
 
     ros::spin();
