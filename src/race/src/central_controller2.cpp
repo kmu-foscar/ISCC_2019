@@ -25,7 +25,7 @@ struct Point {
     Point(double _x, double _y) : x(_x), y(_y) {}
 };
 
-enum { BASE, };
+enum { BASE, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2,  };
 
 
 double path_arrived_threshold = 2.5;
@@ -119,8 +119,8 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         Point temp;
         // temp.x = 1*cos(front_heading);
         // temp.y = 1*sin(front_heading);
-        temp.x = 1*cos((-yaw+90)*3.141592/180.0);
-        temp.y = 1*sin((-yaw+90)*3.141592/180.0);
+        temp.x = 1*cos((-yaw+90)*3.1415926535/180.0);
+        temp.y = 1*sin((-yaw+90)*3.1415926535/180.0);
 	    std::cout << "temp : " << temp.x << ' ' << temp.y << std::endl;
         std::cout << "yaw : " << -yaw+90 << std::endl;
         // steering 계산 부분
@@ -136,16 +136,17 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // drive msg publising 부분
         race::drive_values drive_msg;
         
-        if(steering >= 28) steering = 28;
-	if(steering <= -28) steering = -28;
-        
         drive_msg.throttle = (int)throttle;
-        drive_msg.steering = (int)(steering*-1);
+        drive_msg.steering = (steering);
         
         // ROS_INFO("steering : %f", steering);
-        std::cout << "steering : " << steering << std::endl;
+        std::cout << "steering : " << drive_msg.steering << std::endl;
 
         drive_msg_pub.publish(drive_msg);
+    } else if(mode == STATIC_OBSTACLE_1) {
+
+    } else if(mode == STATIC_OBSTACLE_2){
+
     }
     std::cout << current_path_index << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;

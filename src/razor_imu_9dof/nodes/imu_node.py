@@ -100,7 +100,9 @@ imuMsg.linear_acceleration_covariance = [
 0 , 0 , 0.04
 ]
 
-default_port='/dev/ttyUSB0'
+# default_port='/dev/ttyUSB0'
+default_port='/dev/ttyIMU'
+
 port = rospy.get_param('~port', default_port)
 
 #read calibration parameters

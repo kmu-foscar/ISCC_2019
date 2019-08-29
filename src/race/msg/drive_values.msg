@@ -1,2 +1,2 @@
 int16 throttle
-int16 steering
+float64 steering
