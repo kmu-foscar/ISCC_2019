@@ -88,7 +88,7 @@ class SlideWindow:
         #    if nonzeroy[good_center_inds] != [] and nonzerox[good_center_inds] != []:
         #        p_cut = np.polyfit(nonzeroy[good_center_inds], nonzerox[good_center_inds], 2)
 
-        print("x_current : ", x_current)
+        # print("x_current : ", x_current)
 
         if x_current is None:
             cv2.waitKey(10)

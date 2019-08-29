@@ -37,10 +37,14 @@ ack_publisher = None
 car_run_speed = 0.5
 
 lane_info_pub = rospy.Publisher('lane_info', lane_info, queue_size=1)
-drive_values_pub = rospy.Publisher('drive_values', drive_values, queue_size=1)
+drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
+
+st = 0
 
 def auto_drive(pid):
     global car_run_speed
+    global st
+    print(pid)
     w = 0
     if -0.065 < pid and pid < 0.065:
         w = 1
@@ -59,26 +63,53 @@ def auto_drive(pid):
     # ack_msg.drive.speed = car_run_speed
     # ack_publisher.publish(ack_msg)
 
-    drive_value = drive_values()
-    drive_value.throttle = car_run_speed;
-    drive_value.steering = -pid/0.074
+    th = 1
 
+    if pid < 400 :
+        if pid < 195 :
+            st = 2
+        elif pid == 195:
+            st = 0
+        else :
+            st = -2
+    else :
+        if pid < 605 :
+            st = -2
+        elif pid == 605 :
+            st = 0
+        else :
+            st = 2
+
+    if st > 28:
+    	st = 28
+    if st < -28:
+    	st = -28
+
+    drive_value = drive_values()
+    drive_value.throttle = int(3)
+    #drive_value.steering = int(pid/0.074)
+    drive_value.steering = int(st)
+    
+    drive_values_pub.publish(drive_value)
     print('steer: ', drive_value.steering)
     print('speed: ', car_run_speed)
 
 def main():
     rospy.init_node('lane_detector_goni_node')
     cap = cv2.VideoCapture(0)
-    # cap = cv2.VideoCapture("TEST14.avi")
+    #cap = cv2.VideoCapture("TEST14.avi")
+    cap.set(3,800)
+    cap.set(4,448)
 
     while True:
         ret, img = cap.read()
         img1, x_location = process_image(img)
         cv2.imshow('result', img1)
         if x_location != None:
-            pid = round(pidcal.pid_control(int(x_location)), 6)
-            print(pid)
-            auto_drive(pid)
+            # pid = round(pidcal.pid_control(int(x_location)), 6)
+            # print(pid)
+            # auto_drive(pid)
+            auto_drive(x_location)
             # print pid
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -107,9 +138,9 @@ def process_image(frame):
     kernel_size = 5
     blur = cv2.GaussianBlur(frame,(kernel_size, kernel_size), 0)
 
-    # img_bird = warper.warp(frame)
+    img_bird = warper.warp(frame)
 
-    # cv2.imshow("img_bird",img_bird)
+    cv2.imshow("img_bird",img_bird)
 
     hsv = cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
     h,s,v = cv2.split(hsv)

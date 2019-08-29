@@ -113,7 +113,7 @@ int main (int argc, char** argv) {
                               ((int)encoder_values[2] << 8 ) |
                               ((int)encoder_values[3] << 0);
 
-		cout << "encoder val : " << encoder_val << endl;
+		// cout << "encoder val : " << encoder_val << endl;
 
 		std_msgs::Int32 encoder_msg;
 		encoder_msg.data = encoder_val;
