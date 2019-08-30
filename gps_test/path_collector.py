@@ -16,7 +16,7 @@ def odom_callback(msg):
 def key_callback(msg):
 	global location
 	with open("path.txt", 'a') as f:
-		f.write(str(location[0]) + ', ' + str(location[1]) + '\n')
+		f.write(str(location[0]) + ' ' + str(location[1]) + '\n')
 		print(location)
 
 

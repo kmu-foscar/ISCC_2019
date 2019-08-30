@@ -39,7 +39,7 @@ sudo apt -y install ros-kinetic-cmake-modules
 sudo apt -y install ros-kinetic-navfn
 sudo apt -y install ros-kinetic-rotate-recovery 
 
-
+sudo apt -y install libarmadillo-dev
 sudo apt -y install python-visual
 
 sudo pip install geographiclib
@@ -48,3 +48,7 @@ cd ~/ISCC_2019/ && catkin_make
 
 echo "source ~/ISCC_2019/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
+
+sudo su
+echo -e SUBSYSTEM=="tty", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", SYMLINK+="ttyGPS1"\\nSUBSYSTEM=="tty", ATTRS{serial}=="0001", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="ttyIMU" > /etc/udev/rules.d/99-usb-serial.rules
+exit

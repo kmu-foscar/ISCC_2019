@@ -52,6 +52,9 @@ target_link_libraries(obstacle_tracker_node obstacle_tracker)
 add_executable(obstacle_publisher_node src/nodes/obstacle_publisher_node.cpp)
 target_link_libraries(obstacle_publisher_node obstacle_publisher)
 
+add_executable(test_node src/obstacles_test.cpp)
+target_link_libraries(test_node obstacle_tracker)
+
 #
 # Build nodelets
 #
