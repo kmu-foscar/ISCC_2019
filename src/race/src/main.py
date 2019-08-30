@@ -7,21 +7,22 @@ import numpy as np
 
 # import roslib
 import sys
-# import rospy
+import rospy
 
 import importlib
 # import cPickle
 # import genpy.message
-# from rospy import ROSException
-# import sensor_msgs.msg
+from rospy import ROSException
+import sensor_msgs.msg
 # import actionlib
-# import rostopic
-# import rosservice
-# from rosservice import ROSServiceException
+import rostopic
+import rosservice
+from rosservice import ROSServiceException
 
 from slidewindow import SlideWindow
 from warper import Warper
 from pidcal import PidCal
+from race.msg import lane_info, drive_values
 
 
 warper = Warper()
@@ -31,6 +32,10 @@ pidcal = PidCal()
 cv_image = None
 ack_publisher = None
 car_run_speed = 0.5
+rospy.init_node('llll')
+lane_info_pub = rospy.Publisher('lane_info', lane_info, queue_size=1)
+drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
+
 
 def auto_drive(pid):
     global car_run_speed
@@ -54,10 +59,10 @@ def auto_drive(pid):
     print('speed: ', car_run_speed)
 
 def main():
-
-    # cap = cv2.VideoCapture(0);
+    
+    cap = cv2.VideoCapture(0)
     # cap = cv2.VideoCapture(1)
-    cap = cv2.VideoCapture("TEST.avi")
+    # cap = cv2.VideoCapture("TEST.avi")
     # cap.set(CV_CAP_PROP_FRAME_WIDTH,800)
     # cap.set(CV_CAP_PROP_FRAME_HEIGHT,448)
     cap.set(3,800)

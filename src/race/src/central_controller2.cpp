@@ -30,7 +30,7 @@ struct Point {
 enum { BASE, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2,  };
 
 
-double path_arrived_threshold = 2.5;
+double path_arrived_threshold = 2.0;
 double yaw_refresh_threshold = 1.0;
 
 
@@ -50,7 +50,7 @@ Point prev_position;
 float front_heading = 0.0;
 float rear_heading = 0.0;
 
-double steering, throttle=5;
+double steering, throttle=3;
 
 
 double cal_distance(const Point A, const Point B) {
@@ -71,8 +71,21 @@ double getAngle(std::vector<Point> v1, std::vector<Point> v2) {
     x2 /= u2;
     y2 /= u2;
 
+    std::cout << "v1 : " << x1 << ' ' << y1 << std::endl;
+    std::cout << "v2 : " << x2 << ' ' << y2 << std::endl;
+
     // std::cout << x1 << ' ' << y1 << ' ' << x2 << ' ' << y2 << std::endl;
-    return asin((x1*y2+x2*y1)/(cal_distance(v2[0], v2[1]))) * 180.0 / M_PI;
+    // return asin((x1*y2-x2*y1)/(cal_distance(v2[0], v2[1]))) * 180.0 / M_PI;
+    float ang1 = atan2(y1, x1) * 180.0 / M_PI;
+    float ang2 = atan2(y2, x2) * 180.0 / M_PI;
+    if(ang1 < 0) ang1 += 360;
+    if(ang2 < 0) ang2 += 360;
+
+    std::cout << "asin v1, v2 : " << ang1 << ' ' << ang2 << std::endl;
+
+    return ang1 - ang2; 
+    
+    
 
 }
 
@@ -85,7 +98,7 @@ bool operator<(geometry_msgs::Point A, geometry_msgs::Point B) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/path_pension.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/path_contest1.txt");
     std::string line;
 
     float min_dis = 9999999;
@@ -129,15 +142,17 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         Point temp;
         // temp.x = 1*cos(front_heading);
         // temp.y = 1*sin(front_heading);
-        temp.x = 1*cos((-yaw+90)*3.1415926535/180.0);
-        temp.y = 1*sin((-yaw+90)*3.1415926535/180.0);
-	    std::cout << "temp : " << temp.x << ' ' << temp.y << std::endl;
-        std::cout << "yaw : " << -yaw+90 << std::endl;
+
+        temp.x = 1*cos(yaw*3.1415926535/180.0);
+        temp.y = 1*sin(yaw*3.1415926535/180.0);
+
+	    // std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
+        std::cout << "yaw : " << yaw << std::endl;
         // steering 계산 부분
         v1.push_back(center_point);
         v1.push_back(temp);
         v2.push_back(current_position);
-        v2.push_back(path[current_path_index]);
+        v2.push_back(path[current_path_index+2]);
 
         // std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
 
@@ -147,7 +162,7 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         race::drive_values drive_msg;
         
         drive_msg.throttle = (int)throttle;
-        drive_msg.steering = (steering);
+        drive_msg.steering = (steering*5);
         
         // ROS_INFO("steering : %f", steering);
         std::cout << "steering : " << drive_msg.steering << std::endl;
@@ -160,7 +175,7 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         race::drive_values drive_msg;
 
         drive_msg.throttle = (int)throttle;
-        drive_msg.steering = (steering);
+        drive_msg.steering = (-steering*0.5);
         
         // ROS_INFO("steering : %f", steering);
         std::cout << "steering : " << drive_msg.steering << std::endl;
