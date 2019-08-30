@@ -68,6 +68,7 @@ cap = cv2.VideoCapture(0);
 
 while True:
 	ret, img = cap.read();
+	# img = cv2.imread("1567153704029-0.jpg")
 	cv2.imshow("frame", img)
 
 	#gray and hsv transform
@@ -121,7 +122,7 @@ while True:
 				cv2.rectangle(img, (x, y), (x+w, y+h), (200, 152, 50), 2)
 				inputImage = gray[y:y+h, x:x+w]
 				# kernel = np.ones((1, 1), np.uint8)
-				# erosion = cv2.erode(inputImage, kernel, iterations=1)
+				inputImage = cv2.erode(inputImage, kernel, iterations=1)
 
 				# 후보군을 resize해준 후 feature vector(Hog)를 추출해준다.
 				sign = cv2.resize(inputImage, (128, 128))
