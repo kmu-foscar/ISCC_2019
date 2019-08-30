@@ -252,7 +252,7 @@ int main(int argc, char** argv) {
 
     // TODO 표지판, 신호등, 차선 정보 가공
     if(pstatus.data) {
-        if(mission_num == BASE|| mission_num == GO_STRAIGHT_TRAFFIC_1 || mission_num == GO_STRAIGHT) {
+        if(mission_num == BASE|| mission_num == GO_STRAIGHT_TRAFFIC_1 || mission_num == GO_STRAIGHT_TRAFFIC_2 || mission_num == GO_STRAIGHT) {
             m.mode = 0; // 일반주행
         } 
         else if(mission_num == TURN_LEFT || mission_num == TURN_LEFT_TRAFFIC_1 || mission_num == TURN_LEFT_TRAFFIC_2) {
