@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(race)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   message_generation
 )
+
+find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -131,6 +133,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -153,7 +156,8 @@ add_executable(serial_control_node src/serial_control.cpp)
 add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cpp)
 add_executable(mode_controller_node src/mode_controller.cpp)
 add_executable(central_controller_node src/central_controller.cpp)
-
+add_executable(lane_detector_node src/lane_detector.cpp)
+add_executable(central_controller_node2 src/central_controller2.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -166,14 +170,24 @@ add_executable(central_controller_node src/central_controller.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#add_dependencies(ackermann_msg_to_drive_msg_node
-#  race_generate_messages_cpp
-#)
-#add_dependencies(serial_control_node
-#  race_generate_messages_cpp
-#)
-
-
+add_dependencies(ackermann_msg_to_drive_msg_node
+  race_generate_messages_cpp
+)
+add_dependencies(serial_control_node
+  race_generate_messages_cpp
+)
+add_dependencies(mode_controller_node
+  race_generate_messages_cpp
+)
+add_dependencies(central_controller_node
+  race_generate_messages_cpp
+)
+add_dependencies(lane_detector_node
+  race_generate_messages_cpp
+)
+add_dependencies(central_controller_node2
+  race_generate_messages_cpp
+)
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
@@ -190,6 +204,14 @@ target_link_libraries(mode_controller_node
 target_link_libraries(central_controller_node
   ${catkin_LIBRARIES}
 )
+target_link_libraries(lane_detector_node
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+target_link_libraries(central_controller_node2
+  ${catkin_LIBRARIES}
+)
+
 
 #############
 ## Install ##

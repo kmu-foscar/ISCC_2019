@@ -54,7 +54,9 @@ void serialCallback(const race::drive_values::ConstPtr& msg) {
 		front_brake = 0x33;
 		estop = 0x01;
 	}
-	steer_total = ((float)(msg->steering) * 71.0 * -1);
+	steer_total = (int)((msg->steering) * 71.0);
+	if(steer_total > 2000) steer_total = 2000;
+	if(steer_total < -2000) steer_total = -2000;
 	printf("steer : %d , speed : %u\n", steer_total, speed_total);
 	steer_0 = steer_total >> 8;
 	steer_1 = steer_total & 0xff;
@@ -70,7 +72,7 @@ int main (int argc, char** argv) {
 	ros::Publisher encoder_value_pub = nh.advertise<std_msgs::Int32>("encoder_value", 10);
 
 	try {
-		ser.setPort("/dev/ttyUSB0");
+		ser.setPort("/dev/ttyUSB1");
 		ser.setBaudrate(115200);
 		serial::Timeout to = serial::Timeout::simpleTimeout(1000);
 		ser.setTimeout(to);
@@ -113,7 +115,7 @@ int main (int argc, char** argv) {
                               ((int)encoder_values[2] << 8 ) |
                               ((int)encoder_values[3] << 0);
 
-		cout << "encoder val : " << encoder_val << endl;
+		// cout << "encoder val : " << encoder_val << endl;
 
 		std_msgs::Int32 encoder_msg;
 		encoder_msg.data = encoder_val;
