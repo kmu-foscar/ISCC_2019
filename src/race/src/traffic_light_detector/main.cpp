@@ -1,5 +1,3 @@
-//#include <ros/ros.h>
-//#include <std_msgs/UInt8.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -14,21 +12,39 @@ const Vec3b HSV_RED_UPPER = Vec3b(10, 255, 255);
 const Vec3b HSV_RED_LOWER1 = Vec3b(160, 100, 100);
 const Vec3b HSV_RED_UPPER1 = Vec3b(190, 255, 255);
 
-const Vec3b HSV_GREEN_LOWER = Vec3b(40, 200, 200);
+const Vec3b HSV_GREEN_LOWER = Vec3b(40, 200, 30);
 const Vec3b HSV_GREEN_UPPER = Vec3b(120, 255, 255);
 
 const Vec3b HSV_YELLOW_LOWER = Vec3b(10, 70, 130);
 const Vec3b HSV_YELLOW_UPPER = Vec3b(50, 255, 255);
 
+
 const Vec3b HSV_BLACK_LOWER = Vec3b(0, 0, 0);
 const Vec3b HSV_BLACK_UPPER = Vec3b(180, 255, 50);
 
 const int MAX_SIZE = 230;
-const int MIN_SIZE = 30;
+const int MIN_SIZE = 50;
 const int MAX_HEIGHT = 50;
-const int MIN_HEIGHT = 10;
+const int MIN_HEIGHT = 20;
 
 bool use_roi = false;
+
+//Contour 영역 내에 텍스트 쓰기
+//https://github.com/bsdnoobz/opencv-code/blob/master/shape-detect.cpp
+void setLabel(Mat& image, string str, vector<Point> contour)
+{
+    int fontface = FONT_HERSHEY_SIMPLEX;
+    double scale = 0.5;
+    int thickness = 1;
+    int baseline = 0;
+
+    Size text = getTextSize(str, fontface, scale, thickness, &baseline);
+    Rect r = boundingRect(contour);
+
+    Point pt(r.x + ((r.width - text.width) / 2), r.y + ((r.height + text.height) / 2));
+    rectangle(image, pt + Point(0, baseline), pt + Point(text.width, -text.height), CV_RGB(200, 200, 200), FILLED);
+    putText(image, str, pt, fontface, scale, CV_RGB(0, 0, 0), thickness, 8);
+}
 
 struct TrafficLight {
     int left;
@@ -44,417 +60,285 @@ struct TrafficLight {
 
     }
     TrafficLight(int l, int t, int w, int h, int s) : left(l), top(t), width(w), height(h), state(s) {
-
+        if(s == 0)
+            red_on = true;
+        if(s == 1)
+            yellow_on = true;
+        if(s == 2)
+            left_on = true;
+        if(s == 3)
+            green_on = true;
     }
 };
 
-//ros::NodeHandler nh;
-bool isTrafficLight(TrafficLight t) {
-
-    return false;
-}
-
-void light_off(Mat img, Mat &dst) {
-    Mat hscolor;
-    Mat img_labels, stats, centroids;
-    int num;
-
-    // yellow light off
-    Mat hsv;
-    cv::cvtColor(img, hsv, cv::COLOR_BGR2HSV);
-
-    inRange(hsv, HSV_YELLOW_LOWER, HSV_YELLOW_UPPER, hscolor);
-    // detectHScolor(img, YELLOW_1, YELLOW_2, YELLOW_3, YELLOW_4, hscolor);
-    num = connectedComponentsWithStats(hscolor, img_labels, stats, centroids, 8, CV_32S);
-    for(int i = 1; i < num; i++) {
-        int area = stats.at<int>(i, CC_STAT_AREA);
-        int left = stats.at<int>(i, CC_STAT_LEFT);
-        int top = stats.at<int>(i, CC_STAT_TOP);
-        int width = stats.at<int>(i, CC_STAT_WIDTH);
-        int height = stats.at<int>(i, CC_STAT_HEIGHT);
-        if(width> height * 1.5 || height > width * 1.5)
-            continue;
-        if(width < 10)
-            continue;
-        width += 20;
-        left -= 10;
-
-        Rect rc(left,top,width,height);
-        rectangle(dst, rc, Scalar(0, 0, 0), FILLED);
-//        dst = img;
-    }
-
-    //green light off
-    inRange(hsv, HSV_GREEN_LOWER, HSV_GREEN_UPPER, hscolor);
-    imshow("imddg", hscolor);
-
-    // detectHScolor(img, GREEN_1, GREEN_2, GREEN_3, GREEN_4, hscolor);
-    num = connectedComponentsWithStats(hscolor, img_labels, stats, centroids, 8, CV_32S);
-    for(int i = 1; i < num; i++) {
-        int area = stats.at<int>(i, CC_STAT_AREA);
-        int left = stats.at<int>(i, CC_STAT_LEFT);
-        int top = stats.at<int>(i, CC_STAT_TOP);
-        int width = stats.at<int>(i, CC_STAT_WIDTH);
-        int height = stats.at<int>(i, CC_STAT_HEIGHT);
-        if(width> height * 1.5 || height > width * 1.5)
-            continue;
-//        if(width < 10)
-//            continue;
-        left -= 10;
-        width += 10;
-        Rect rc(left,top,width,height);
-        rectangle(dst, rc, Scalar(0, 0, 0), FILLED);
-//        dst = img;
-    }
-
-    //red light off
-    Mat binaryImg1;
-    Mat binaryImg2;
-
-    inRange(hsv, HSV_RED_LOWER, HSV_RED_UPPER, binaryImg1);
-    inRange(hsv, HSV_RED_LOWER1, HSV_RED_UPPER1, binaryImg2);
-
-    hscolor = binaryImg1 | binaryImg2;
-
-    // detectHScolor(img, RED_1, RED_2, RED_3, RED_4, hscolor);
-    num = connectedComponentsWithStats(hscolor, img_labels, stats, centroids, 8, CV_32S);
-    for(int i = 1; i < num; i++) {
-        int area = stats.at<int>(i, CC_STAT_AREA);
-        int left = stats.at<int>(i, CC_STAT_LEFT);
-        int top = stats.at<int>(i, CC_STAT_TOP);
-        int width = stats.at<int>(i, CC_STAT_WIDTH);
-        int height = stats.at<int>(i, CC_STAT_HEIGHT);
-        if(width> height * 1.5 || height > width * 1.5)
-            continue;
-        if(width < 10)
-            continue;
-        width += 20;
-        Rect rc(left,top,width,height);
-        rectangle(dst, rc, Scalar(0, 0, 0), FILLED);
-//        dst = img;dfn A
-    }
-
-}
-
-int getGrayColor(Mat &img, int x, int y) {
-    int r = img.at<Vec3b>(y, x)[2];
-    int g = img.at<Vec3b>(y, x)[1];
-    int b = img.at<Vec3b>(y, x)[0];
-    return 0.2126f * r + 0.7152f * g + 0.0722f * b;
-}
-
 int main(int argc, char** argv) {
-//    ros::init(argc, argv, "traffic_light_node");
-    // VideoCapture cap("yellow.mov");
-    // VideoCapture cap("yellow.mov");
-    VideoCapture cap(1);
-
-
+    VideoCapture cap("test.mov");
     if (!cap.isOpened()) return -1;
 
-
     while(1) {
-        vector<TrafficLight> v;
-//        Mat img = imread("green.png");
         Mat img;
         cap >> img;
+
+        vector<TrafficLight> v;
 
         int rows = img.rows;
         int cols = img.cols;
 
-
-        imshow("imggggggggggg", img);
-
-        // 관심영역 설정 (set ROI (X, Y, W, H)).
-
         Rect rect(0, 0, cols, rows/2);
-        // 관심영역 자르기 (Crop ROI).
 
-        Mat subImage = img(rect);
+        Mat org_img = img(rect);
 
-        imshow("roi", subImage);
+        Mat light_off;
+        org_img.copyTo(light_off);
 
+        Mat binary_red, binary_yellow, binary_green;
 
-        // add contrast -> slow. skip.
+        Mat hsv_img;
+        cvtColor(org_img, hsv_img, COLOR_BGR2HSV);
 
-
-        subImage.copyTo(img);
-        Mat new_image = Mat::zeros( img.size(), img.type() );
-
-        subImage.copyTo(new_image);
-
-
-//        double alpha = 2;
-//        int beta = 5;
-//
-//        for( int y = 0; y < img.rows; y++ ) {
-//            for( int x = 0; x < img.cols; x++ ) {
-//                for( int c = 0; c < 3; c++ ) {
-//                    new_image.at<Vec3b>( y, x )[c] = saturate_cast<uchar>( alpha*( img.at<Vec3b>( y, x )[c] ) + beta );
-//                }
-//            }
-//        }
-
-        Mat hsv, res;
-        Mat hsv1;
-
-        // add blur
-//        medianBlur(img, hsv, 7);
-        img.copyTo(hsv);
-        hsv = img;
-
-        light_off(hsv, new_image);
-
-        imshow("new_image", new_image);
-
-        //    imshow("lightoff", new_image);
-
-        // add binary
-        Mat img_binary;
-        cvtColor(new_image, img_binary, COLOR_BGR2GRAY);
-        threshold(img_binary, img_binary, 125, 255, THRESH_BINARY_INV);
-
-
-        imshow("binary", img_binary);
-
-        cvtColor(hsv, res, COLOR_BGR2HSV);
-        imshow("hsv", res);
-        Mat hscolor;
-
-        Mat img_labels, stats, centroids;
-        int num;
-
-        // inRange(hsvImg, HSV_RED_LOWER, HSV_RED_UPPER, binaryImg);
+        imshow("hsv", hsv_img);
+        // RED Detect
         Mat binaryImg1;
         Mat binaryImg2;
-        inRange(res, HSV_RED_LOWER, HSV_RED_UPPER, binaryImg1);
-        inRange(res, HSV_RED_LOWER1, HSV_RED_UPPER1, binaryImg2);
+        inRange(hsv_img, HSV_RED_LOWER, HSV_RED_UPPER, binaryImg1);
+        inRange(hsv_img, HSV_RED_LOWER1, HSV_RED_UPPER1, binaryImg2);
 
-        hscolor = binaryImg1 | binaryImg2;
+        binary_red = binaryImg1 | binaryImg2;
 
+//        dilate(binary_red, binary_red, Mat());
 
-        // detectHScolor(img, RED_1, RED_2, RED_3, RED_4, hscolor);
-//        imshow("red hscolor", hscolor);
+        imshow("red", binary_red);
 
-        num = connectedComponentsWithStats(hscolor, img_labels, stats, centroids, 8, CV_32S);
-        // idx 0은 전체 이미지
-        for(int j = 1; j < num; j++) {
-            int area = stats.at<int>(j, CC_STAT_AREA);
-            int left = stats.at<int>(j, CC_STAT_LEFT);
-            int top = stats.at<int>(j, CC_STAT_TOP);
-            int width = stats.at<int>(j, CC_STAT_WIDTH);
-            int height = stats.at<int>(j, CC_STAT_HEIGHT);
+        Mat red_img_labels, red_stats, red_centroids;
+        int red_num;
 
-            if(use_roi) {
-                if(width > height * 2 || height > width * 2)
-                    continue;
-                if(width > MAX_SIZE || width < MIN_SIZE || height < MIN_HEIGHT || height > MAX_HEIGHT)
-                    continue;
-            }
+        red_num = connectedComponentsWithStats(binary_red, red_img_labels, red_stats, red_centroids, 8, CV_32S);
+        for(int i = 1; i < red_num; i++) {
+            int area = red_stats.at<int>(i, CC_STAT_AREA);
+            int left = red_stats.at<int>(i, CC_STAT_LEFT);
+            int top = red_stats.at<int>(i, CC_STAT_TOP);
+            int width = red_stats.at<int>(i, CC_STAT_WIDTH);
+            int height = red_stats.at<int>(i, CC_STAT_HEIGHT);
+            if((float)width / (float)height > 1.5)
+                continue;
+            if(width < 20)
+                continue;
+            width += 30;
+            left -= 10;
 
-            for(int start = left; start < left + width * 6; start ++) {
-                if(start == img_binary.cols)
-                    break;
-                if(img_binary.at<uchar>(top+height/2, start) == 0) {
-                    width = start - left;
-                    break;
-                }
-            }
-
-            // 신호등 선택 후 ROI
-            if(use_roi) {
-                if(width < height * 2.5)
-                    continue;
-                if(width < 10)
-                    continue;
-//                float cnt = 0;
-//                float max = width * height;
-//
-//                for(int i = top; i < top + height; i++) {
-//                    for(int j = left; j < left + width; j++) {
-//                        uchar r = new_image.at<Vec3b>(i, j)[2];
-//                        uchar g = new_image.at<Vec3b>(i, j)[1];
-//                        uchar b = new_image.at<Vec3b>(i, j)[0];
-//                        if( r < 70 && g < 70 && b < 70) {
-//                            cnt ++;
-//                        }
-//                    }
-//                }
-//                if(cnt / max < 0.8)
-//                    continue;
-            }
-
-
-            v.push_back(TrafficLight(left, top, width, height, 0));
-
-            rectangle(img, Point(left, top), Point(left+width, top+height), Scalar(0,0,255), 3);
-
+            Rect rc(left,top,width,height);
+            rectangle(light_off, rc, Scalar(0, 0, 0), FILLED);
         }
 
-        inRange(res, HSV_YELLOW_LOWER, HSV_YELLOW_UPPER, hscolor);
 
-        // detectHScolor(img, YELLOW_1, YELLOW_2, YELLOW_3, YELLOW_4, hscolor);
+        // YELLOW Detect
+        inRange(hsv_img, HSV_YELLOW_LOWER, HSV_YELLOW_UPPER, binary_yellow);
 
-//        imshow("yellow hscolor", hscolor);
+//        dilate(binary_yellow, binary_yellow, Mat());
 
-        num = connectedComponentsWithStats(hscolor, img_labels, stats, centroids, 8, CV_32S);
-        // idx 0은 전체 이미지
-        for(int j = 1; j < num; j++) {
-            int area = stats.at<int>(j, CC_STAT_AREA);
-            int left = stats.at<int>(j, CC_STAT_LEFT);
-            int top = stats.at<int>(j, CC_STAT_TOP);
-            int width = stats.at<int>(j, CC_STAT_WIDTH);
-            int height = stats.at<int>(j, CC_STAT_HEIGHT);
+        Mat yel_img_labels, yel_stats, yel_centroids;
+        int yel_num;
+
+        yel_num = connectedComponentsWithStats(binary_yellow, yel_img_labels, yel_stats, yel_centroids, 8, CV_32S);
+
+        for(int i = 1; i < yel_num; i++) {
+            int area = yel_stats.at<int>(i, CC_STAT_AREA);
+            int left = yel_stats.at<int>(i, CC_STAT_LEFT);
+            int top = yel_stats.at<int>(i, CC_STAT_TOP);
+            int width = yel_stats.at<int>(i, CC_STAT_WIDTH);
+            int height = yel_stats.at<int>(i, CC_STAT_HEIGHT);
+            if((float)width / (float)height > 1.5)
+                continue;
+            if(width < 20)
+                continue;
+            width += 30;
+            left -= 15;
+
+            Rect rc(left,top,width,height);
+            rectangle(light_off, rc, Scalar(0, 0, 0), FILLED);
+        }
+
+        imshow("yellow", binary_yellow);
+
+        // GREEN Detect
+        inRange(hsv_img, HSV_GREEN_LOWER, HSV_GREEN_UPPER, binary_green);
+
+        dilate(binary_green, binary_green, Mat());
+
+        Mat green_img_labels, green_stats, green_centroids;
+        int green_num;
+
+        green_num = connectedComponentsWithStats(binary_green, green_img_labels, green_stats, green_centroids, 8, CV_32S);
+        for(int i = 1; i < green_num; i++) {
+            int area = green_stats.at<int>(i, CC_STAT_AREA);
+            int left = green_stats.at<int>(i, CC_STAT_LEFT);
+            int top = green_stats.at<int>(i, CC_STAT_TOP);
+            int width = green_stats.at<int>(i, CC_STAT_WIDTH);
+            int height = green_stats.at<int>(i, CC_STAT_HEIGHT);
+            if((float)width / (float)height > 1.5)
+                continue;
+            if(width < 20)
+                continue;
+            left -= 20;
+            width += 20;
+
+            Rect rc(left,top,width,height);
+            rectangle(light_off, rc, Scalar(0, 0, 0), FILLED);
+        }
+
+
+        imshow("green", binary_green);
+
+        imshow("light_off", light_off);
+
+
+        Mat binary_light_off;
+        cvtColor(light_off, light_off, COLOR_BGR2GRAY);
+        threshold(light_off, binary_light_off, 100, 255, THRESH_BINARY_INV);
+
+        imshow("binary_light_off", binary_light_off);
+
+        // RED Detection
+        for(int j = 1; j < red_num; j++) {
+            int area = red_stats.at<int>(j, CC_STAT_AREA);
+            int left = red_stats.at<int>(j, CC_STAT_LEFT);
+            int top = red_stats.at<int>(j, CC_STAT_TOP);
+            int width = red_stats.at<int>(j, CC_STAT_WIDTH);
+            int height = red_stats.at<int>(j, CC_STAT_HEIGHT);
+            for(int start = left+width; start < left + width * 6; start ++) {
+                if(start == binary_light_off.cols - 1)
+                    break;
+                if(binary_light_off.at<uchar>(top+height/3, start) == 0) {
+//                    width = start - left;
+                    break;
+                }
+                width ++;
+            }
 
             if(use_roi) {
-                if(width > height * 2 || height > width * 2)
-                    continue;
-                if(width > MAX_SIZE || width < MIN_SIZE || height < MIN_HEIGHT || height > MAX_HEIGHT)
+                if(width > MAX_SIZE || width < MIN_SIZE || height > MAX_HEIGHT || height < MIN_HEIGHT)
                     continue;
             }
 
-            for(int start = left; start < left + width * 4; start ++) {
-                if(start == img_binary.cols)
+            v.push_back(TrafficLight(left, top, width, height, 0));
+        }
+
+        // YELLOW Detection
+        for(int j = 1; j < yel_num; j++) {
+            int area = yel_stats.at<int>(j, CC_STAT_AREA);
+            int left = yel_stats.at<int>(j, CC_STAT_LEFT);
+            int top = yel_stats.at<int>(j, CC_STAT_TOP);
+            int width = yel_stats.at<int>(j, CC_STAT_WIDTH);
+            int height = yel_stats.at<int>(j, CC_STAT_HEIGHT);
+
+            for(int start = left+width; start < left + width * 4; start ++) {
+                if(start == binary_light_off.cols - 1)
                     break;
-                if(img_binary.at<uchar>(top+height/2, start) == 0) {
-                    width = start - left;
+                if(binary_light_off.at<uchar>(top+height/2, start) == 0) {
                     break;
                 }
+                width ++;
             }
 
             for(int start = left; start > left - width * 2; start--) {
                 if(start == 0)
                     break;
-                if(img_binary.at<uchar>(top+height / 2, start) == 0) {
+                if(binary_light_off.at<uchar>(top+height/3, start) == 0) {
                     width += left - start;
                     left = start;
                     break;
                 }
             }
 
-            // 신호등 선택 후 ROI
             if(use_roi) {
-                if(width < height * 2.5)
+                if(width > MAX_SIZE || width < MIN_SIZE || height > MAX_HEIGHT || height < MIN_HEIGHT)
                     continue;
-                if(width < 10)
-                    continue;
-//                float cnt = 0;
-//                float max = width * height;
-//
-//                for(int i = top; i < top + height; i++) {
-//                    for(int j = left; j < left + width; j++) {
-//                        uchar r = new_image.at<Vec3b>(i, j)[2];
-//                        uchar g = new_image.at<Vec3b>(i, j)[1];
-//                        uchar b = new_image.at<Vec3b>(i, j)[0];
-//                        if( r < 70 && g < 70 && b < 70) {
-//                            cnt ++;
-//                        }
-//                    }
-//                }
-//                if(cnt / max < 0.5)
-//                    continue;
             }
 
+            bool familiar = false;
 
-            v.push_back(TrafficLight(left, top, width, height, 1));
+            for(int i = 0; i < v.size(); i++) {
+                TrafficLight tl = v[i];
+                if(abs(tl.left - left) < 30 && abs(tl.top - top) < 30) {
+                    tl.yellow_on = true;
+                    familiar = true;
+                }
 
-            rectangle(img, Point(left, top), Point(left+width, top+height), Scalar(0,255,255),3);
-
+            }
+            if(!familiar) {
+                v.push_back(TrafficLight(left, top, width, height, 1));
+            }
         }
 
+        // GREEN Detection
+        for(int j = 1; j < green_num; j++) {
+            int area = green_stats.at<int>(j, CC_STAT_AREA);
+            int left = green_stats.at<int>(j, CC_STAT_LEFT);
+            int top = green_stats.at<int>(j, CC_STAT_TOP);
+            int width = green_stats.at<int>(j, CC_STAT_WIDTH);
+            int height = green_stats.at<int>(j, CC_STAT_HEIGHT);
 
-        imshow("imgorigin", hsv);
-
-
-        inRange(res, HSV_GREEN_LOWER, HSV_GREEN_UPPER, hscolor);
-
-
-        // detectHScolor(img, GREEN_1, GREEN_2, GREEN_3, GREEN_4, hscolor);
-       imshow("green_hscolor", hscolor);
-
-        num = connectedComponentsWithStats(hscolor, img_labels, stats, centroids, 8, CV_32S);
-        // idx 0은 전체 이미지
-        for(int j = 1; j < num; j++) {
-            int area = stats.at<int>(j, CC_STAT_AREA);
-            int left = stats.at<int>(j, CC_STAT_LEFT);
-            int top = stats.at<int>(j, CC_STAT_TOP);
-            int width = stats.at<int>(j, CC_STAT_WIDTH);
-            int height = stats.at<int>(j, CC_STAT_HEIGHT);
-
-            if(use_roi) {
-                if(width > height * 2 || height > width * 2)
-                    continue;
-                if(width > MAX_SIZE || width < MIN_SIZE || height < MIN_HEIGHT || height > MAX_HEIGHT)
-                    continue;
-            }
+            int org_width = width;
 
             for(int start = left; start > left - width * 5; start --) {
                 if(start == 0)
                     break;
-                if(img_binary.at<uchar>(top+height / 2, start) == 0) {
+                if(binary_light_off.at<uchar>(top+height/3, start) == 0) {
                     width += left - start;
                     left = start;
                     break;
                 }
             }
 
-            // 신호등 선택 후 ROI
+            int delta = 0;
+            for(int start = left+width; start < left + width * 4; start ++) {
+                if(start == binary_light_off.cols - 1)
+                    break;
+                if(binary_light_off.at<uchar>(top+height/2, start) == 0) {
+                    break;
+                }
+                width ++;
+                delta++;
+            }
+
             if(use_roi) {
-                if(width < height * 2.5)
+                if(width > MAX_SIZE || width < MIN_SIZE || height > MAX_HEIGHT || height < MIN_HEIGHT)
                     continue;
-
-                if(width < 30)
-                    continue;
-//                float cnt = 0;
-//                float max = width * height;
-//
-//                for(int i = top; i < top + height; i++) {
-//                    for(int j = left; j < left + width; j++) {
-//                        uchar r = new_image.at<Vec3b>(i, j)[2];
-//                        uchar g = new_image.at<Vec3b>(i, j)[1];
-//                        uchar b = new_image.at<Vec3b>(i, j)[0];
-//                        if( r < 70 && g < 70 && b < 70) {
-//                            cnt ++;
-//                        }
-//                    }
-//                }
-//                if(cnt / max < 0.8)
-//                    continue;
             }
 
-            v.push_back(TrafficLight(left, top, width, height, 2));
-            rectangle(img, Point(left, top), Point(left+width, top+height), Scalar(0,255,0), 3);
-        }
+            bool familiar = false;
 
-        // 신호등 판별 필요
+            for(int i = 0; i < v.size(); i++) {
+                TrafficLight tl = v[i];
+                if(abs(tl.left - left) < 30 && abs(tl.top - top) < 30) {
+                    if(delta > org_width/2) {
+                        v[i].left_on = true;
+                    }
+                    else
+                        v[i].green_on = true;
+                    familiar = true;
+                }
 
-        int max_size = 0;
-        int max_idx = 0;
-        for(int i = 0; i < v.size(); i ++) {
-            int tmp = v[i].width * v[i].height;
-            if(max_size < tmp) {
-                max_size = tmp;
-                max_idx = i;
+            }
+            if(!familiar) {
+                // 좌회전 불
+                if(delta > org_width/3)
+                    v.push_back(TrafficLight(left, top, width, height, 2));
+                else
+                    v.push_back(TrafficLight(left, top, width, height, 3));
             }
         }
 
-        if(v.size() > 0) {
-            cout << v[0].width << " " << v[1].height << endl;
-            int data = 0;
-            if(v[max_idx].red_on) data += 8;
-            if(v[max_idx].yellow_on) data += 4;
-            if(v[max_idx].left_on) data += 2;
-            if(v[max_idx].green_on) data += 1;
-
-//            ros::Publisher traffic_light_pub = nh.advertise<std_msgs::UInt8>("traffic_light", 1);
-//            UInt8 msg;
-//            msg.data = data;
+        for(int i = 0; i < v.size(); i++) {
+            rectangle(org_img, Point(v[i].left, v[i].top), Point(v[i].left+v[i].width, v[i].top+v[i].height), Scalar(0,255,0), 3);
+            cout << v[i].red_on << " " << v[i].yellow_on << " " << v[i].left_on << " " << v[i].green_on << endl;
         }
 
-        imshow("img", img);
-        // waitKey(0);
+        imshow("org_img", org_img);
+        waitKey(0);
         if (waitKey(5) >= 0)
             break;
-    }
 
+
+    }
 }
