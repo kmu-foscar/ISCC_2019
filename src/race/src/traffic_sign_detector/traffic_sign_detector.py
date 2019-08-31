@@ -13,15 +13,15 @@ import cv2
 # Red Color Range
 HSV_RED_LOWER = np.array([0, 100, 100])
 HSV_RED_UPPER = np.array([10, 255, 255])
-HSV_RED_LOWER1 = np.array([160, 100, 100])
-HSV_RED_UPPER1 = np.array([179, 255, 255])
+HSV_RED_LOWER1 = np.array([150, 100, 100])
+HSV_RED_UPPER1 = np.array([189, 255, 255])
 
 # Yellow Color Range
-HSV_YELLOW_LOWER = np.array([10, 80, 120])
+HSV_YELLOW_LOWER = np.array([10, 40, 120])
 HSV_YELLOW_UPPER = np.array([40, 255, 255])
 
 # Blue Color Range
-HSV_BLUE_LOWER = np.array([80, 160, 65])
+HSV_BLUE_LOWER = np.array([60, 160, 65])
 HSV_BLUE_UPPER = np.array([140, 255, 255])
 
 #construct the argument parse and parse command line arguments
@@ -51,6 +51,8 @@ for imagePath in paths.list_images(args["training"]):
 	# extract Histogram of Oriented Gradients from the sign
 	H = feature.hog(sign, orientations=8, pixels_per_cell=(12, 12),
 		cells_per_block=(2, 2), transform_sqrt=True, block_norm="L2")
+	# H = feature.hog(sign, orientations=9, pixels_per_cell=(50, 50),
+	# 	cells_per_block=(2, 2), transform_sqrt=True, block_norm="L2")
 
 	# update the data and labels
 	data.append(H)
@@ -64,16 +66,16 @@ model.fit(data, labels)
 print(model)
 print("[INFO] evaluating...")
 
-cap = cv2.VideoCapture(0);
+cap = cv2.VideoCapture(1);
 
 while True:
 	ret, img = cap.read();
-	# img = cv2.imread("1567153704029-0.jpg")
 	cv2.imshow("frame", img)
 
 	#gray and hsv transform
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+	cv2.imshow("hsv", hsv)
 
 	# binary
 	# 1. red
@@ -115,20 +117,23 @@ while True:
 		area = cv2.contourArea(cnt)
 		print(area)
 		# 면적이 2000이상이고 가로/세로 비율이 0.6~1.4인 후보군을 bounding해준다.
-		if area > 2000.0 :
+		if area > 1000.0 :
 			x, y, w, h = cv2.boundingRect(cnt)
 			rate = w / h
 			if rate > 0.8 and rate < 1.2 :
 				cv2.rectangle(img, (x, y), (x+w, y+h), (200, 152, 50), 2)
 				inputImage = gray[y:y+h, x:x+w]
 				# kernel = np.ones((1, 1), np.uint8)
-				inputImage = cv2.erode(inputImage, kernel, iterations=1)
+				# erosion = cv2.erode(inputImage, kernel, iterations=1)
 
 				# 후보군을 resize해준 후 feature vector(Hog)를 추출해준다.
 				sign = cv2.resize(inputImage, (128, 128))
 				cv2.imshow("sign", sign)
 				(H, hogImage) = feature.hog(sign, orientations=8, pixels_per_cell=(12, 12), \
 					cells_per_block=(2, 2), transform_sqrt=True, block_norm="L2", visualise=True)
+				# (H, hogImage) = feature.hog(sign, orientations=9, pixels_per_cell=(50, 50), \
+					# cells_per_block=(2, 2), transform_sqrt=True, block_norm="L2", visualise=True)
+
 
 				cv2.imshow("hog", hogImage)
 
