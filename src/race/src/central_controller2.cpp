@@ -51,6 +51,10 @@ float front_heading = 0.0;
 float rear_heading = 0.0;
 
 double steering, throttle=3;
+float data_transform(float x, float in_min, float in_max, float out_min, float out_max) // 적외선 센서 데이터 변환 함수
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 
 double cal_distance(const Point A, const Point B) {
@@ -83,10 +87,10 @@ double getAngle(std::vector<Point> v1, std::vector<Point> v2) {
 
     std::cout << "asin v1, v2 : " << ang1 << ' ' << ang2 << std::endl;
 
-    return ang1 - ang2; 
-    
-    
-
+    if(ang1 - ang2 > 180)
+    	return (ang1 - ang2) - 360; 
+    if(ang1 - ang2 < -180)
+    	return 360 + (ang1 - ang2);
 }
 
 bool operator<(geometry_msgs::Point A, geometry_msgs::Point B) {
@@ -153,6 +157,9 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         v1.push_back(temp);
         v2.push_back(current_position);
         v2.push_back(path[current_path_index+2]);
+        // v2.push_back(path[current_path_index]);
+
+        // v2.push_back(path[current_path_index+1]);
 
         // std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
 
@@ -161,6 +168,8 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // drive msg publising 부분
         race::drive_values drive_msg;
         
+        throttle = data_transform(-abs(steering), -180, 0, 3, 8);
+
         drive_msg.throttle = (int)throttle;
         drive_msg.steering = (steering*5);
         
@@ -188,16 +197,19 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
 }
 
+
 void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& msg) {
     geometry_msgs::Point target_point;
     target_point.x = 100000;
     target_point.y = 100000;
     target_point.z = 0;
-
     for(int i = 0 ; i < msg->circles.size() ; i++) {
-        if(msg->circles[i].center < target_point) {
+        // if(msg->circles[i].center < target_point) {
+        //     target_point = msg->circles[i].center;
+        // }
+        if(msg->circles[i].center.y < target_point.y) {
             target_point = msg->circles[i].center;
-        }    
+        }   
     }
     
     Point center_point;
@@ -207,6 +219,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& msg) {
     y_axis.y = 1;
     circle.x = target_point.x;
     circle.y = target_point.y;
+    ROS_INFO_STREAM("x = " << target_point.x << "y = " << target_point.y  ) ;
 
     std::vector<Point> v1, v2;
     v1.push_back(center_point);
