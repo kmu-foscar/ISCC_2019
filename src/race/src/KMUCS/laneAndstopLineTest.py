@@ -57,7 +57,7 @@ def main():
 
     # cap = cv2.VideoCapture(0);
     # cap = cv2.VideoCapture(1)
-    cap = cv2.VideoCapture("TEST.avi")
+    cap = cv2.VideoCapture("TEST14.avi")
     # cap.set(CV_CAP_PROP_FRAME_WIDTH,800)
     # cap.set(CV_CAP_PROP_FRAME_HEIGHT,448)
     cap.set(3,800)
@@ -68,7 +68,7 @@ def main():
         img1, x_location = process_image(img)
         if x_location != None:
             pid = round(pidcal.pid_control(int(x_location)), 6)
-            auto_drive(pid)
+            # auto_drive(pid)
         cv2.imshow('result', img1)
         # print (pid)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -92,11 +92,77 @@ def light_calc(frame):
 
     return dst
 
+def stop_line(frame):
+
+    out_img = np.dstack((frame, frame, frame)) * 255
+    height = frame.shape[0]
+    width = frame.shape[1]
+
+	# inputImage = gray[y:y+h, x:x+w]
+
+    x = 180
+    w = 440
+    y = 320
+    h = 80
+
+    x1 = 0
+    y1 = 0
+    x2 = 0
+    y2 = 0
+
+    cnt = 0
+
+    roi_img = frame[y:y+h, x:x+w]
+
+    lines = cv2.HoughLines(roi_img,1,np.pi/180,100)
+    print(lines)
+
+    if lines is None:
+        return [-1, -1, -1, -1]
+    else :
+        for i in range(len(lines)):
+            for rho, theta in lines[i]:
+                tempTheta = theta/np.pi *180
+                if(tempTheta > 88 and tempTheta < 92):
+                    cnt = cnt + 1
+
+                    a = np.cos(theta)
+                    b = np.sin(theta)
+                    x0 = a*rho
+                    y0 = b*rho
+                    x1 += int(x0 + 1000*(-b))
+                    y1 += int(y0 + 1000*(a))
+                    x2 += int(x0 - 1000*(-b))
+                    y2 += int(y0 -1000*(a))
+        if cnt != 0:
+            return [int(x1/cnt), int(y1/cnt + y), int(x2/cnt), int(y2/cnt + y)]
+        else :
+            return [-1, -1, -1, -1]
+
+
+
+
 def process_image(frame):
 
     # blur
-    kernel_size = 5
-    blur = cv2.GaussianBlur(frame,(kernel_size, kernel_size), 0)
+    kernel_size = 3
+    blur = cv2.GaussianBlur(frame,(kernel_size, kernel_size), 1)
+
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+
+
+    cv2.imshow("blue", blur)
 
     # img_bird = warper.warp(frame)
 
@@ -129,7 +195,7 @@ def process_image(frame):
 
     # cv2.imshow("bi",binary_img)
 
-    ret1,binary_img1 = cv2.threshold(white_process_img, 170, 255, cv2.THRESH_BINARY)
+    ret1,binary_img1 = cv2.threshold(white_process_img, 150, 255, cv2.THRESH_BINARY)
 
     # cv2.imshow("bi1",binary_img1)
 
@@ -140,6 +206,8 @@ def process_image(frame):
     cv2.imshow("img_result",img_mask)
 
 
+
+
     # canny edge
     low_threshold = 60#60
     high_threshold = 70# 70
@@ -147,7 +215,7 @@ def process_image(frame):
     # edges_img = cv2.Canny(np.uint8(blur_gray), low_threshold, high_threshold)
     # edges_img1 = cv2.Canny(np.uint8(binary_img), low_threshold, high_threshold)
     # edges_img2 = cv2.Canny(np.uint8(binary_img1), low_threshold, high_threshold)
-    edges_img3 = cv2.Canny(np.uint8(img_mask), low_threshold, high_threshold)
+    edges_img3 = cv2.Canny(np.uint8(blur), low_threshold, high_threshold)
 
 
     # cv2.imshow("edges_img1",edges_img3)
@@ -158,11 +226,31 @@ def process_image(frame):
     # bird1 = warper.warp(edges_img2)
     bird2 = warper.warp(edges_img3)
 
+    # stop_line
+    # 미검출시[-1, -1, -1, -1] 검출시[x1, y1, x2, y2]
+    stop_line_array = stop_line(bird2)
+    # print(stop_line_array)
+
     # cv2.imshow("bird",bird2)
 
     # img1, x_location1 = slidewindow.slidewindow(img)
     # img2, x_location2 = slidewindow.slidewindow(bird)
     img3, x_location3 = slidewindow.slidewindow(bird2)
+
+    # 정지선 인식 범위
+    cv2.rectangle(img3, (180, 320),  (180+440, 320+80), (0, 0, 255), 4)
+
+    # 정지선 그리기
+    if(stop_line_array[0] != -1):
+
+        font = cv2.FONT_HERSHEY_COMPLEX  # normal size serif font
+        fontScale = 1.2
+        cv2.putText(img3, 'stop!!!!!!', (10, 80), font, fontScale, (0, 0, 255), 4)
+
+        cv2.line(img3,(stop_line_array[0], stop_line_array[1]) \
+        ,(stop_line_array[2], stop_line_array[3]),(0,0,255),10)
+
+
 
     # print(x_location1)
 
