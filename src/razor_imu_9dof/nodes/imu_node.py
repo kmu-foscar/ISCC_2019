@@ -40,6 +40,7 @@ from tf.transformations import quaternion_from_euler
 from dynamic_reconfigure.server import Server
 from razor_imu_9dof.cfg import imuConfig
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
+from std_msgs.msg import Float64
 
 degrees2rad = math.pi/180.0
 imu_yaw_calibration = 0.0
@@ -59,6 +60,7 @@ pub = rospy.Publisher('imu/data', Imu, queue_size=1)
 srv = Server(imuConfig, reconfig_callback)  # define dynamic_reconfigure callback
 diag_pub = rospy.Publisher('diagnostics', DiagnosticArray, queue_size=1)
 diag_pub_time = rospy.get_time();
+yaw_pub = rospy.Publisher('imu/yaw', Float64, queue_size=1)
 
 imuMsg = Imu()
 
@@ -98,7 +100,9 @@ imuMsg.linear_acceleration_covariance = [
 0 , 0 , 0.04
 ]
 
-default_port='/dev/ttyUSB0'
+# default_port='/dev/ttyUSB0'
+default_port='/dev/ttyIMU'
+
 port = rospy.get_param('~port', default_port)
 
 #read calibration parameters
@@ -138,7 +142,7 @@ gyro_average_offset_z = rospy.get_param('~gyro_average_offset_z', 0.0)
 # Check your COM port and baud rate
 rospy.loginfo("Opening %s...", port)
 try:
-    ser = serial.Serial(port=port, baudrate=115200, timeout=1)
+    ser = serial.Serial(port=port, baudrate=921600, timeout=1)
 except serial.serialutil.SerialException:
     rospy.logerr("IMU not found at port "+port + ". Did you specify the correct port in the launch file?")
     #exit
@@ -155,7 +159,12 @@ rospy.sleep(5) # Sleep for 5 seconds to wait for the board to boot
 ### configure board ###
 #stop datastream
 # ser.write('#o0' + chr(13))
-# ser.write('<sof1>' + chr(13))
+ser.write('<sof1>' + chr(13))
+print("clibration")
+rospy.sleep(5)
+ser.write('<cmf>' + chr(13))
+rospy.sleep(5)
+
 # rospy.sleep(5)
 # ser.write('<sor3>' + chr(13))
 # rospy.sleep(5)
@@ -165,12 +174,12 @@ rospy.sleep(5) # Sleep for 5 seconds to wait for the board to boot
 # rospy.sleep(5)
 # ser.write('<sem1>' + chr(13))
 # rospy.sleep(5)
-ser.write('<cz>' + chr(13))
-rospy.sleep(5)
-ser.write('<cmco>' + chr(13))
-rospy.sleep(5)
-ser.write('<cmo>' + chr(13))
-rospy.sleep(5)
+# ser.write('<cz>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<cmco>' + chr(13))
+# rospy.sleep(5)
+# ser.write('<cmo>' + chr(13))
+# rospy.sleep(5)
 
 
 
@@ -257,77 +266,16 @@ while not rospy.is_shutdown():
     #f.write(line)                     # Write to the output log file
     words = string.split(line[1:-1],",")    # Fields split
     if len(words) > 2:
-        #in AHRS firmware z axis points down, in ROS z axis points up (see REP 103)
-        pitch = float(words[0])*degrees2rad
-
-        roll = float(words[1])*degrees2rad
-
-        yaw_deg = -float(words[2])
-        yaw_deg = yaw_deg + imu_yaw_calibration
-        if yaw_deg > 180.0:
-            yaw_deg = yaw_deg - 360.0
-        if yaw_deg < -180.0:
-            yaw_deg = yaw_deg + 360.0
-        yaw = yaw_deg*degrees2rad
-        #in AHRS firmware y axis points right, in ROS y axis points left (see REP 103)
-
-        # Publish message
-        # AHRS firmware accelerations are negated
-        # This means y and z are correct for ROS, but x needs reversing
-
-        #imuMsg.linear_acceleration.x = -float(words[3]) * accel_factor
-        #imuMsg.linear_acceleration.y = float(words[4]) * accel_factor
-        #imuMsg.linear_acceleration.z = float(words[5]) * accel_factor
-
-        imuMsg.linear_acceleration.x = (math.trunc(float(words[3])*100)*0.01)*9.8
-        imuMsg.linear_acceleration.y = (math.trunc(float(words[4])*100)*0.01)*9.8
-        imuMsg.linear_acceleration.z = (math.trunc(float(words[5])*100)*0.01)*9.8
-        # imuMsg.linear_acceleration.z = float(0)
-
-        rospy.loginfo(str(words[0]) + " " + str(words[1]) + " " + str(words[2]) + " " + str(words[3]) + " " + str(words[4]) + " " + str(words[5]) + " " + str(words[6]) + " " + str(words[7]) + " " + str(words[8]))
-
-        #rospy.loginfo(str(roll) + " " + str(pitch) + " " + str(yaw) + " " + str(imuMsg.linear_acceleration.x) + " " + str(imuMsg.linear_acceleration.y) + " " + str(imuMsg.linear_acceleration.z))
-
-        imuMsg.angular_velocity.x = float(words[6])
-        #imuMsg.angular_velocity.x = float(words[0])
-
-        #in AHRS firmware y axis points right, in ROS y axis points left (see REP 103)
-        imuMsg.angular_velocity.y = -float(words[7])
-        #imuMsg.angular_velocity.y = float(words[1])
-
-        #in AHRS firmware z axis points down, in ROS z axis points up (see REP 103)
-        imuMsg.angular_velocity.z = -float(words[8])
-        #imuMsg.angular_velocity.z = float(words[2])
-
-    q = quaternion_from_euler(roll,pitch,yaw)
-    imuMsg.orientation.x = q[0]
-    imuMsg.orientation.y = q[1]
-    imuMsg.orientation.z = q[2]
-    imuMsg.orientation.w = q[3]
-    imuMsg.header.stamp= rospy.Time.now()
-    imuMsg.header.frame_id = 'base_imu_link'
-    imuMsg.header.seq = seq
-    seq = seq + 1
-    pub.publish(imuMsg)
-
-    if (diag_pub_time < rospy.get_time()) :
-        diag_pub_time += 1
-        diag_arr = DiagnosticArray()
-        diag_arr.header.stamp = rospy.get_rostime()
-        diag_arr.header.frame_id = '1'
-        diag_msg = DiagnosticStatus()
-        diag_msg.name = 'Razor_Imu'
-        diag_msg.level = DiagnosticStatus.OK
-        diag_msg.message = 'Received AHRS measurement'
-        diag_msg.values.append(KeyValue('roll (deg)',
-                                str(roll*(180.0/math.pi))))
-        diag_msg.values.append(KeyValue('pitch (deg)',
-                                str(pitch*(180.0/math.pi))))
-        diag_msg.values.append(KeyValue('yaw (deg)',
-                                str(yaw*(180.0/math.pi))))
-        diag_msg.values.append(KeyValue('sequence number', str(seq)))
-        diag_arr.status.append(diag_msg)
-        diag_pub.publish(diag_arr)
+        imuMsg.orientation.x = float(words[1])
+        imuMsg.orientation.y = float(words[2])
+        imuMsg.orientation.z = -float(words[3])+90
+        imuMsg.orientation.w = float(words[4])
+        imuMsg.header.stamp= rospy.Time.now()
+        imuMsg.header.frame_id = 'base_imu_link'
+        imuMsg.header.seq = seq
+        seq = seq + 1
+        pub.publish(imuMsg)
+        print(imuMsg.orientation.z)
 
 ser.close
 #f.close
