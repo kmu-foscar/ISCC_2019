@@ -32,7 +32,7 @@ class SlideWindow:
 
         # print(nonzerox)
         # init data need to sliding windows
-        margin = 30
+        margin = 40
         minpix = 1
         # print("hello")
         left_lane_inds = []
@@ -181,7 +181,7 @@ class SlideWindow:
         cv2.polylines(out_img,[pts_center],False,(0,120,120),1)
 
         if x_location is not None :
-            cv2.circle(out_img,(x_location,340),5,(255,255,255))
+            cv2.circle(out_img,(x_location,340),10,(0,155,255))
 
 
         return out_img, x_location
