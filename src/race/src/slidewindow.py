@@ -128,7 +128,7 @@ class SlideWindow:
                         x_current = np.int(np.mean(nonzerox[good_left_inds]))
 
                     elif nonzeroy[left_lane_inds] != [] and nonzerox[left_lane_inds] != []:
-                        p_left = np.polyfit(nonzeroy[left_lane_inds], nonzerox[left_lane_inds], 2)
+                        p_left = np.polyfit(nonzeroy[left_lane_inds], nonzerox[left_lane_inds], 1)
                         x_current = np.int(np.polyval(p_left, win_y_high))
 
                     # 338~344 is for recognize line which is yellow line in processed image(you can check in imshow)
@@ -149,7 +149,7 @@ class SlideWindow:
                     if len(good_right_inds) > minpix:
                         x_current = np.int(np.mean(nonzerox[good_right_inds]))
                     elif nonzeroy[right_lane_inds] != [] and nonzerox[right_lane_inds] != []:
-                        p_right = np.polyfit(nonzeroy[right_lane_inds], nonzerox[right_lane_inds], 2)
+                        p_right = np.polyfit(nonzeroy[right_lane_inds], nonzerox[right_lane_inds], 1)
                         x_current = np.int(np.polyval(p_right, win_y_high))
 
                     if win_y_low >= 338 and win_y_low < 344:
