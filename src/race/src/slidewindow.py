@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import *
 from matplotlib.pyplot import *
+import math
 
 class SlideWindow:
     def __init__(self):
@@ -189,12 +190,11 @@ class SlideWindow:
         if x_location is not None :
             cv2.circle(out_img,(x_location,340),5,(255,255,255))
 
-        if x_location is None:
-            continue
+        if x_location is not None:
+            dx = 108
+            dy = width/2 - x_location
+            
+            steer =  math.atan(dy/dx)
 
-        dx = 108
-        dy = width/2 - x_location
-
-        steer =  math.atan(dy/dx)
-
-        return out_img, x_location, steer
+            return out_img, x_location, -steer*0.25
+        return out_img, x_location, 0

@@ -37,12 +37,12 @@ ack_publisher = None
 car_run_speed = 1
 
 # lane_info_pub = rospy.Publisher('lane_info', lane_info, queue_size=1)
-# drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
+drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
 
 
 def auto_drive(steer):
     drive_value = drive_values()
-    drive_value.steering = steer
+    drive_value.steering = steer*180.0/3.141592
     drive_value.throttle = 5
     drive_values_pub.publish(drive_value)
     print('steer: ', drive_value.steering)
@@ -50,8 +50,8 @@ def auto_drive(steer):
 
 def main():
     rospy.init_node('lane_detector_goni_node')
-    cap = cv2.VideoCapture("TEST.avi")
-    # cap = cv2.VideoCapture(1)
+    # cap = cv2.VideoCapture("TEST.avi")
+    cap = cv2.VideoCapture(0)
     cap.set(3,800)
     cap.set(4,448)
 

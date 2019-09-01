@@ -30,28 +30,31 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles) 
 			obstacle_point = obstacles->circles[i].center;
 		}
 	}
+
+	ROS_INFO_STREAM("x = " << obstacle_point.x << "y = " << obstacle_point.y  ) ;
+
  	
-	float diag = sqrt(pow(obstacle_point.x, 2) + pow(obstacle_point.y, 2));
-	float dist = 100; //temp dist
-	float diag2 = sqrt(pow(diag, 2) + pow(dist, 2));
+	// float diag = sqrt(pow(obstacle_point.x, 2) + pow(obstacle_point.y, 2));
+	// float dist = 100; //temp dist
+	// float diag2 = sqrt(pow(diag, 2) + pow(dist, 2));
 
-	float theta1 = atan2(obstacle_point.y, obstacle_point.x);
-	float theta2 = atan2(diag, dist);
-	float yaw = 50; //temp yaw
-	float angle = 90.0 - yaw;
+	// float theta1 = atan2(obstacle_point.y, obstacle_point.x);
+	// float theta2 = atan2(diag, dist);
+	// float yaw = 50; //temp yaw
+	// float angle = 90.0 - yaw;
 
-	final_point.x = sqrt(pow(diag2, 2) / (1 + pow(tan(theta1 + theta2), 2)));
-	final_point.y = final_point.x * tan(theta1 + theta2);
+	// final_point.x = sqrt(pow(diag2, 2) / (1 + pow(tan(theta1 + theta2), 2)));
+	// final_point.y = final_point.x * tan(theta1 + theta2);
 
 
-	float mat[2][2] = {
-		{cos(angle), -sin(angle)},
-		{sin(angle), cos(angle)}
-	};
-	float xy[2][1] = {
-		{final_point.x},
-		{final_point.y}
-	};
+	// float mat[2][2] = {
+	// 	{cos(angle), -sin(angle)},
+	// 	{sin(angle), cos(angle)}
+	// };
+	// float xy[2][1] = {
+	// 	{final_point.x},
+	// 	{final_point.y}
+	// };
 	
 	// xy = mat*xy;
 	

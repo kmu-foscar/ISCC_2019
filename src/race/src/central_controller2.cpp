@@ -31,8 +31,6 @@ enum { BASE, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2,  };
 
 
 double path_arrived_threshold = 2.0;
-double yaw_refresh_threshold = 1.0;
-
 
 int mode = BASE;
 int current_path_index = 0;
@@ -91,6 +89,7 @@ double getAngle(std::vector<Point> v1, std::vector<Point> v2) {
     	return (ang1 - ang2) - 360; 
     if(ang1 - ang2 < -180)
     	return 360 + (ang1 - ang2);
+    return ang1 - ang2;
 }
 
 bool operator<(geometry_msgs::Point A, geometry_msgs::Point B) {
@@ -102,7 +101,7 @@ bool operator<(geometry_msgs::Point A, geometry_msgs::Point B) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/path_contest1.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path2.txt");
     std::string line;
 
     float min_dis = 9999999;
@@ -134,6 +133,17 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     current_position.x = odom->pose.pose.position.x;
     current_position.y = odom->pose.pose.position.y;
     front_heading = odom->pose.pose.position.z;
+
+    double minimum_dist = 9999999;
+    int nearest_idx = -1;
+    for(int i = 0 ; i < path.size() ; i++) {
+        double cur_dist_ = cal_distance(current_position, path[i]);
+        if(cur_dist_ < minimum_dist) {
+            nearest_idx = i;
+            minimum_dist = cur_dist_;
+        }
+    }
+    std::cout << "nearest_idx : " << nearest_idx << std::endl;
 
     if(!is_path_set) {
         set_path();
@@ -170,8 +180,9 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         
         throttle = data_transform(-abs(steering), -180, 0, 3, 8);
 
-        drive_msg.throttle = (int)throttle;
-        drive_msg.steering = (steering*5);
+        //drive_msg.throttle = (int)throttle;
+        drive_msg.throttle = 5;
+        drive_msg.steering = (steering);
         
         // ROS_INFO("steering : %f", steering);
         std::cout << "steering : " << drive_msg.steering << std::endl;
