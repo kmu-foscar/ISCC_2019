@@ -32,7 +32,7 @@ class SlideWindow:
 
         # print(nonzerox)
         # init data need to sliding windows
-        margin = 30
+        margin = 50
         minpix = 1
         # print("hello")
         left_lane_inds = []
@@ -46,7 +46,7 @@ class SlideWindow:
 
         pts_right = np.array([[width/2 + 120, height], [width/2 + 120, 300], [width/2 + 260, 300], [width/2 + 260, height]], np.int32)
         cv2.polylines(out_img, [pts_right], False, (255,0,0), 1)
-        #pts_center = np.array([[width/2 + 90, height], [width/2 + 90, height - 150], [width/2 - 60, height - 231], [width/2 - 60, height]], np.int32)
+        #pts_center = np.array([[width/2 + 120, height], [width/2 + 120, height - 15], [width/2 - 60, height - 231], [width/2 - 60, height]], np.int32)
         #cv2.polylines(out_img, [pts_center], False, (0,0,255), 1)
         pts_catch = np.array([[0, 340], [width, 340]], np.int32)
         cv2.polylines(out_img, [pts_catch], False, (0,120,120), 1)
@@ -92,10 +92,10 @@ class SlideWindow:
         #    if nonzeroy[good_center_inds] != [] and nonzerox[good_center_inds] != []:
         #        p_cut = np.polyfit(nonzeroy[good_center_inds], nonzerox[good_center_inds], 2)
 
-        print("x_current : ", x_current)
+        # print("x_current : ", x_current)
 
-        if x_current is None:
-            cv2.waitKey(10)
+        # if x_current is None:
+        #     cv2.waitKey(10)
 
         if line_flag != 3:
             # it's just for visualization of the valid inds in the region
@@ -115,6 +115,7 @@ class SlideWindow:
                     win_y_high = y_current - (window) * window_height
                     win_x_low = x_current - margin
                     win_x_high = x_current + margin
+
                     # draw rectangle
                     # 0.33 is for width of the road
                     cv2.rectangle(out_img, (win_x_low, win_y_low), (win_x_high, win_y_high), (0, 255, 0), 1)
@@ -128,6 +129,7 @@ class SlideWindow:
                     elif nonzeroy[left_lane_inds] != [] and nonzerox[left_lane_inds] != []:
                         p_left = np.polyfit(nonzeroy[left_lane_inds], nonzerox[left_lane_inds], 2)
                         x_current = np.int(np.polyval(p_left, win_y_high))
+
                     # 338~344 is for recognize line which is yellow line in processed image(you can check in imshow)
                     if win_y_low >= 108 and win_y_low < 504:
                     # 0.165 is the half of the road(0.33)
@@ -137,14 +139,18 @@ class SlideWindow:
                     win_y_high = y_current - (window) * window_height
                     win_x_low = x_current - margin
                     win_x_high = x_current + margin
+
                     cv2.rectangle(out_img, (win_x_low - int(width * 0.50), win_y_low), (win_x_high - int(width * 0.50), win_y_high), (0, 255, 0), 1)
                     cv2.rectangle(out_img, (win_x_low, win_y_low), (win_x_high, win_y_high), (255, 0, 0), 1)
+
                     good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_x_low) & (nonzerox < win_x_high)).nonzero()[0]
+
                     if len(good_right_inds) > minpix:
                         x_current = np.int(np.mean(nonzerox[good_right_inds]))
                     elif nonzeroy[right_lane_inds] != [] and nonzerox[right_lane_inds] != []:
                         p_right = np.polyfit(nonzeroy[right_lane_inds], nonzerox[right_lane_inds], 2)
                         x_current = np.int(np.polyval(p_right, win_y_high))
+
                     if win_y_low >= 338 and win_y_low < 344:
                     # 0.165 is the half of the road(0.33)
                         x_location = x_current - int(width * 0.25)
@@ -183,5 +189,12 @@ class SlideWindow:
         if x_location is not None :
             cv2.circle(out_img,(x_location,340),5,(255,255,255))
 
+        if x_location is None:
+            continue
 
-        return out_img, x_location
+        dx = 108
+        dy = width/2 - x_location
+
+        steer =  math.atan(dy/dx)
+
+        return out_img, x_location, steer
