@@ -113,11 +113,12 @@ while True:
 	# gray = cv2.bitwise_and(cv2.dilate(binary, kernel, iterations = 1), gray)
 	# cv2.imshow("hi", gray)
 
+
 	for cnt in goodContours:
 		area = cv2.contourArea(cnt)
-		print(area)
-		# 면적이 2000이상이고 가로/세로 비율이 0.6~1.4인 후보군을 bounding해준다.
-		if area > 2000.0 :
+		# print(area)
+		# 면적이 1000이상이고 가로/세로 비율이 0.8~1.2인 후보군을 bounding해준다.
+		if area > 1000.0 :
 			x, y, w, h = cv2.boundingRect(cnt)
 			rate = w / h
 			if rate > 0.8 and rate < 1.2 :
@@ -130,12 +131,14 @@ while True:
 				sign = cv2.resize(inputImage, (128, 128))
 				cv2.imshow("sign", sign)
 				(H, hogImage) = feature.hog(sign, orientations=8, pixels_per_cell=(12, 12), \
-					cells_per_block=(2, 2), transform_sqrt=True, block_norm="L2", visualise=True)
+					cells_per_block=(2, 2), transform_sqrt=True, block_norm="L2", visualize=True)
 
 				cv2.imshow("hog", hogImage)
 
 				# 학습된 모델에 넣는다.
 				pred = model.predict(H.reshape(1, -1))[0]
+
+				print(pred.title())
 
 				cv2.putText(img, pred.title(), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, \
 					(70, 255, 0), 2)
