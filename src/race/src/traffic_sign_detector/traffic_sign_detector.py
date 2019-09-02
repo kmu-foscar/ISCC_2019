@@ -45,6 +45,9 @@ for imagePath in paths.list_images(args["training"]):
 	image = cv2.imread(imagePath)
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
+	# kernel = np.ones((3, 3), np.uint8)
+	# erode = cv2.erode(gray, kernel, iterations=2)
+
 	# resize
 	sign = cv2.resize(gray, (128, 128))
 
@@ -120,8 +123,8 @@ while True:
 			if rate > 0.8 and rate < 1.2 :
 				cv2.rectangle(img, (x, y), (x+w, y+h), (200, 152, 50), 2)
 				inputImage = gray[y:y+h, x:x+w]
-				# kernel = np.ones((1, 1), np.uint8)
-				# erosion = cv2.erode(inputImage, kernel, iterations=1)
+				# kernel = np.ones((3, 3), np.uint8)
+				# erode = cv2.erode(inputImage, kernel, iterations=2)
 
 				# 후보군을 resize해준 후 feature vector(Hog)를 추출해준다.
 				sign = cv2.resize(inputImage, (128, 128))
