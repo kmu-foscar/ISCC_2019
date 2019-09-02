@@ -32,7 +32,7 @@ enum { BASE, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2,  };
 
 double path_arrived_threshold = 2.0;
 
-int mode = BASE;
+int mode = STATIC_OBSTACLE_1;
 int current_path_index = 0;
 std::vector<Point> path;
 bool is_path_set = false;
@@ -48,12 +48,24 @@ Point prev_position;
 float front_heading = 0.0;
 float rear_heading = 0.0;
 
+float y_clipping_threshold = 1.5;
+int obstacle_1_started = 0;
+
+
 double steering, throttle=3;
+
+
 float data_transform(float x, float in_min, float in_max, float out_min, float out_max) // 적외선 센서 데이터 변환 함수
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+bool point_cmp(const Point A, const Point B) {
+    if(fabs(A.y - B.y) < 0.3) {
+        return fabs(A.x) < fabs(B.x);
+    }
+    return A.y < B.y;
+}
 
 double cal_distance(const Point A, const Point B) {
     return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
@@ -209,38 +221,71 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 }
 
 
-void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& msg) {
-    geometry_msgs::Point target_point;
-    target_point.x = 100000;
-    target_point.y = 100000;
-    target_point.z = 0;
-    for(int i = 0 ; i < msg->circles.size() ; i++) {
-        // if(msg->circles[i].center < target_point) {
-        //     target_point = msg->circles[i].center;
-        // }
-        if(msg->circles[i].center.y < target_point.y) {
-            target_point = msg->circles[i].center;
-        }   
+void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_msg) {
+    if(mode != STATIC_OBSTACLE_1) return;
+
+    std::vector<Point> obstacles;
+    std::cout << "------------obstacles------------" << std::endl;
+    for(int i = 0 ; i < obstacles_msg->circles.size() ; i++) {
+        float x_pos = obstacles_msg->circles[i].center.x;
+        float y_pos = obstacles_msg->circles[i].center.y;
+        if(fabs(y_pos) < y_clipping_threshold) {
+            obstacles.push_back(Point(-y_pos, x_pos));
+            std::cout << obstacles.back().x << ' ' << obstacles.back().y << std::endl;
+        }
     }
-    
-    Point center_point;
-    Point y_axis;
-    Point circle;
+    std::cout << "-----------sorted_obstacles----------" << std::endl;
+    sort(obstacles.begin(), obstacles.end(), point_cmp);
+    if(obstacles.size() <= 0) return;
+    for(int i = 0 ; i < obstacles.size() ; i++) {
+        std::cout << obstacles[i].x << ' ' << obstacles[i].y << std::endl;
+    }
 
-    y_axis.y = 1;
-    circle.x = target_point.x;
-    circle.y = target_point.y;
-    ROS_INFO_STREAM("x = " << target_point.x << "y = " << target_point.y  ) ;
+    if(obstacles[0].x < 0 && obstacle_1_started == 0) {
+        obstacle_1_started = 1;
+    }
+    if(obstacles[0].x >= 0 && obstacle_1_started == 0) {
+        obstacle_1_started = 2;
+    }
+    std::cout << obstacle_1_started << std::endl;
+    if(obstacle_1_started == 1) {
+        int idx = 0;
+        while(obstacles[idx].y < 0.3) idx++;
+        if(idx >= obstacles.size()) return;
+        steering = 30-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
+        std::cout << obstacle_1_started << ' ' << steering << std::endl;
+        if(obstacles[idx].y < 0.5) obstacle_1_started = 3;
+    } else if(obstacle_1_started == 2) {
+        int idx = 0;
+        while(obstacles[idx].y < 0.3) idx++;
+        if(idx >= obstacles.size()) return;
+        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+30);
+        std::cout << obstacle_1_started << ' ' << steering << std::endl;
+        if(obstacles[idx].y < 0.5) obstacle_1_started = 4;
+    } else if(obstacle_1_started == 3) {
+        int idx = 0;
+        while(obstacles[idx].y < 0.3) idx++;
+        if(idx >= obstacles.size()) return;
+        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+30);
+        std::cout << obstacle_1_started << ' ' << steering << std::endl;
+        if(obstacles[idx].y < 0.5 && obstacles[idx].x > 0) obstacle_1_started = 5;
+    } else if(obstacle_1_started == 4) {
+        int idx = 0;
+        while(obstacles[idx].y < 0.3) idx++;
+        if(idx >= obstacles.size()) return;
+        steering = 30-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
+        std::cout << obstacle_1_started << ' ' << steering << std::endl;
+        if(obstacles[idx].y < 0.5 && obstacles[idx].x < 0) obstacle_1_started = 5;
+    } else if(obstacle_1_started == 5) {
+        mode = BASE;
+    }
 
-    std::vector<Point> v1, v2;
-    v1.push_back(center_point);
-    v1.push_back(y_axis);
-    v2.push_back(center_point);
-    v2.push_back(circle);
+    race::drive_values drive_msg;
 
-    double angle = getAngle(v1, v2);
-
-    steering = -angle-5;
+    //drive_msg.throttle = (int)throttle;
+    drive_msg.throttle = 5;
+    drive_msg.steering = (steering);
+    drive_msg_pub.publish(drive_msg);
 }
 
 void odom_rear_callback(const nav_msgs::Odometry::ConstPtr& odom) {

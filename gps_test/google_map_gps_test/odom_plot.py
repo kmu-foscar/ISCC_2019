@@ -6,7 +6,7 @@ from nav_msgs.msg import Odometry
 from os.path import expanduser
 import utm
 
-file_directory = expanduser("~/ISCC_2019/src/race/src/path/path_contest1.txt")
+file_directory = expanduser("~/ISCC_2019/src/race/src/path/final_path2.txt")
 
 lat = []
 lon = []
