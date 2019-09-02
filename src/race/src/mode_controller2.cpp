@@ -7,9 +7,9 @@
 #include "race/mode.h"
 
 // TRAFFIC_LIGHT
-#define RED_AND_RIGHT    10     // 1010
-#define GREEN_AND_RIGHT  3      // 0011
-#define GREEN            1      // 0001
+#define TL_RED_AND_RIGHT    10     // 1010
+#define TL_GREEN_AND_RIGHT  3      // 0011
+#define TL_GREEN            1      // 0001
 
 // 청신호 000X
 // 좌회전 00X0
@@ -26,27 +26,33 @@ struct Point {
 int gps_point_index = 0;
 bool is_stopline = 0;           // 0: 정지선 없음, 1: 정지선 인식
 
+uint8_t pstatus = 0;
 uint8_t pmode = 0;
+
 uint8_t traffic_light = 0;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ALL_OFF() { pmode = 0; }
+bool gps_drive_flag = false;
+bool lane_detect_flag = false;
+bool static_obstacle_flag = false;
+bool dynamic_obstacle_flag = false;
+bool parking_flag = false;
 
-void GPS_DRIVE_ON() { pmode += 16; }
-void GPS_DRIVE_OFF() { pmode -= 16; }
+void GPS_DRIVE_ON() { gps_drive_flag = true; }
+void GPS_DRIVE_OFF() { gps_drive_flag = false; }
 
-void LANE_DETECT_ON() { pmode += 8; }
-void LANE_DETECT_OFF() { pmode -= 8; }
+void LANE_DETECT_ON() { lane_detect_flag = true; }
+void LANE_DETECT_OFF() { lane_detect_flag = false; }
 
-void STATIC_OBSTACLE_ON() { pmode += 4; }
-void STATIC_OBSTACLE_OFF() { pmode -= 4; }
+void STATIC_OBSTACLE_ON() { static_obstacle_flag = true; }
+void STATIC_OBSTACLE_OFF() { static_obstacle_flag = false; }
 
-void DYNAMIC_OBSTACLE_ON() { pmode += 2; }
-void DYNAMIC_OBSTACLE_OFF() { pmode -= 2; }
+void DYNAMIC_OBSTACLE_ON() { dynamic_obstacle_flag = true; }
+void DYNAMIC_OBSTACLE_OFF() { dynamic_obstacle_flag = false; }
 
-void PARKING_ON() { pmode += 1; }
-void PARKING_OFF() { pmode -= 1; }
+void PARKING_ON() { parking_flag = true; }
+void PARKING_OFF() { parking_flag = false; }
 
 /*
 void STOPLINE_ON() { pmode += 32; }
@@ -58,6 +64,25 @@ void TRAFFIC_SIGN_OFF() { pmode -= 16; }
 void TRAFFIC_LIGHT_ON() { pmode += 8; }
 void TRAFFIC_LIGHT_OFF() { pmode -= 8; }
 */
+
+void ALL_OFF() {
+    gps_drive_flag = false;
+    lane_detect_flag = false;
+    static_obstacle_flag = false;
+    dynamic_obstacle_flag = false;
+    parking_flag = false;
+}
+
+void CALCULATE_MODE_FLAG() {
+
+    pmode = 0;
+
+    if(gps_drive_flag) { pmode += 16; }
+    if(lane_detect_flag) { pmode += 8; }
+    if(static_obstacle_flag) { pmode += 4; }
+    if(dynamic_obstacle_flag) { pmode += 2; }
+    if(parking_flag) { pmode += 1; }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -117,52 +142,88 @@ int main(void) {
     }
     else if(514 =< gps_point_index && gps_point_index < 550) {
         LANE_DETECT_ON();
-        if(is_stopline) {
-            
-        }
     }
     else if(550 =< gps_point_index && gps_point_index < 568) {
+        
+        if(is_stopline) {
+            pstatus = 0;
+            if(traffic_light == TL_GREEN) {
+                pstatus =1;
+            }
+        }
+    }
+    else if(568 =< gps_point_index && gps_point_index < 662) {      // 어린이 보호구역, 교차로 진입
+        LANE_DETECT_OFF();
+    }
+    else if(662 =< gps_point_index && gps_point_index < 701) {      // 어린이 보호구역, 직진
+
+        if(is_stopline) {
+            pstatus = 0;
+            if(traffic_light == TL_RED_AND_RIGHT) {
+                pstatus = 1;
+            }
+        }
+    }
+    else if(701 =< gps_point_index && gps_point_index < 764) {      // 어린이 보호구역, 교차로 좌회전
         ALL_OFF();
         GPS_DRIVE_ON();
     }
-    else if(568 =< gps_point_index && gps_point_index < 662) {
-        // 어린이 보호구역
-        
-    }
-    else if(662 =< gps_point_index && gps_point_index < 701) {
-        // 어린이 보호구역
-
-    }
-    else if(701 =< gps_point_index && gps_point_index < 764) {
-        // 어린이 보호구역
-    }
     else if(764 =< gps_point_index && gps_point_index < 787) {
+        DYNAMIC_OBSTACLE_ON();
     }
     else if(787 =< gps_point_index && gps_point_index < 831) {
+
     }
     else if(831 =< gps_point_index && gps_point_index < 913) {
+        ALL_OFF();
+        GPS_DRIVE_ON();
+        LANE_DETECT_ON();
     }
     else if(913 =< gps_point_index && gps_point_index < 945) {
+
+        if(is_stopline) {
+            pstatus = 0;
+            if(traffic_light == TL_GREEN_AND_RIGHT) {
+                pstatus = 1;
+            }
+        }
     }
     else if(945 =< gps_point_index && gps_point_index < 1015) {
+        ALL_OFF();
+        GPS_DRIVE_ON();
     }
     else if(1015 =< gps_point_index && gps_point_index < 1046) {
+        LANE_DETECT_ON();
     }
     else if(1046 =< gps_point_index && gps_point_index < 1063) {
+
+        if(is_stopline) {
+            pstatus = 0;
+            if(traffic_light == TL_GREEN_AND_RIGHT) {
+                pstatus = 1;
+            }
+        }
     }
     else if(1063 =< gps_point_index && gps_point_index < 1161) {
+        ALL_OFF();
+        GPS_DRIVE_ON();
     }
     else if(1161 =< gps_point_index && gps_point_index < 1218) {
+        LANE_DETECT_ON();
     }
     else if(1218 =< gps_point_index && gps_point_index < 1285) {
+        LANE_DETECT_OFF();
     }
     else if(1285 =< gps_point_index && gps_point_index < 1514) {
+        LANE_DETECT_ON();
     }
-    else {}
+
+    CALCULATE_MODE_FLAG();
 
     // mode 발행
-    m.status;
-    m.mode;
+    m.status = pstatus;
+    m.mode = pmode;
+
     mode_pub.publish(m);
 
     ros::spin();
