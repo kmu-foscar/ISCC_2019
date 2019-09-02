@@ -32,7 +32,7 @@ class SlideWindow:
 
         # print(nonzerox)
         # init data need to sliding windows
-        margin = 40
+        margin = 30
         minpix = 1
         # print("hello")
         left_lane_inds = []

@@ -65,6 +65,9 @@ def main():
 
     while True:
         ret, img = cap.read()
+        # img = cv2.imread("20190831_160732.jpg")
+        # img = cv2.resize(img, dsize=(800, 448), interpolation=cv2.INTER_AREA)
+
         img1, x_location = process_image(img)
         if x_location != None:
             pid = round(pidcal.pid_control(int(x_location)), 6)
@@ -148,64 +151,39 @@ def process_image(frame):
     kernel_size = 3
     blur = cv2.GaussianBlur(frame,(kernel_size, kernel_size), 1)
 
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
-    blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
+    for i in range(15):
+        blur = cv2.GaussianBlur(blur,(kernel_size, kernel_size), 1)
 
 
     cv2.imshow("blue", blur)
 
-    # img_bird = warper.warp(frame)
+    gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
 
-    # cv2.imshow("img_bird",img_bird)
+    cv2.imshow("gray", gray)
 
-    hsv = cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
-    h,s,v = cv2.split(hsv)
+    ret, grayBinary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
 
-    hls = cv2.cvtColor(blur,cv2.COLOR_BGR2HLS)
-    h,l,s = cv2.split(hls)
-
-    # cv2.imshow("h",h)
-    yellow_process_img = light_calc(s)
-    white_process_img = light_calc(l)
-
-    # cv2.imshow("enhance", yellow_process_img)
-    # cv2.imshow("white_mask",white_process_img)
-
-    # grayscle
-    # gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    cv2.imshow("grayBinary", ~grayBinary)
 
 
-    # # blur
-    # kernel_size = 5
-    # blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size), 0)
-    # blur_gray1 = cv2.GaussianBlur(yellow_process_img,(kernel_size, kernel_size), 0)
-    # blur_gray2 = cv2.GaussianBlur(white_process_img,(kernel_size, kernel_size), 0)
-
-    ret,binary_img = cv2.threshold(yellow_process_img, 70, 255, cv2.THRESH_BINARY)
-
-    # cv2.imshow("bi",binary_img)
-
-    ret1,binary_img1 = cv2.threshold(white_process_img, 150, 255, cv2.THRESH_BINARY)
-
-    # cv2.imshow("bi1",binary_img1)
-
-    img_mask = cv2.bitwise_or(binary_img,binary_img1)
-
-    # img_result = cv2.bitwise_and(binary_img,binary_img,mask = img_mask)
-
-    cv2.imshow("img_result",img_mask)
-
-
+    # 이진화
+    # hsv = cv2.cvtColor(blur,cv2.COLOR_BGR2HSV)
+    # h,s,v = cv2.split(hsv)
+    #
+    # hls = cv2.cvtColor(blur,cv2.COLOR_BGR2HLS)
+    # h,l,s = cv2.split(hls)
+    #
+    # yellow_process_img = light_calc(s)
+    # white_process_img = light_calc(l)
+    #
+    # ret,binary_img = cv2.threshold(yellow_process_img, 70, 255, cv2.THRESH_BINARY)
+    #
+    # ret1,binary_img1 = cv2.threshold(white_process_img, 150, 255, cv2.THRESH_BINARY)
+    #
+    # img_mask = cv2.bitwise_or(binary_img,binary_img1)
+    #
+    # cv2.imshow("img_result",img_mask)
+    ############
 
 
     # canny edge
@@ -224,9 +202,33 @@ def process_image(frame):
     # img = warper.warp(edges_img)
     # bird = warper.warp(edges_img1)
     # bird1 = warper.warp(edges_img2)
-    bird2 = warper.warp(edges_img3)
 
-    # stop_line
+    # 그림자를 제거하기 위해 grayscle로 변환해서 이진화 역을 하여 and연산 해준다.
+    bird2 = warper.warp(edges_img3)
+    maskbird = warper.warp(~grayBinary)
+
+    # cv2.imshow("1", bird2)
+    # cv2.imshow("2", maskbird)
+
+    # 그림자 마스크 적용전 팽칭시킨다
+    kernel = np.ones((7, 7), np.uint8)
+    maskbird = cv2.dilate(maskbird, kernel, iterations = 1)
+
+    cv2.imshow("1", bird2)
+    cv2.imshow("2", maskbird)
+
+    # cv2.imshow("originBird", bird2)
+    # cv2.imshow("maskbird", maskbird)
+
+    tempBird2 = cv2.bitwise_and(bird2, maskbird)
+
+    cv2.imshow("bad lines", tempBird2)
+
+    goodBird2 = cv2.bitwise_xor(bird2, tempBird2)
+
+    cv2.imshow("good", goodBird2)
+
+    # stop_line 검출
     # 미검출시[-1, -1, -1, -1] 검출시[x1, y1, x2, y2]
     stop_line_array = stop_line(bird2)
     # print(stop_line_array)
@@ -235,7 +237,7 @@ def process_image(frame):
 
     # img1, x_location1 = slidewindow.slidewindow(img)
     # img2, x_location2 = slidewindow.slidewindow(bird)
-    img3, x_location3 = slidewindow.slidewindow(bird2)
+    img3, x_location3 = slidewindow.slidewindow(goodBird2)
 
     # 정지선 인식 범위
     cv2.rectangle(img3, (180, 320),  (180+440, 320+80), (0, 0, 255), 4)
