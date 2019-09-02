@@ -49,13 +49,13 @@ def auto_drive(steer):
     else:
         w = 0.5
 
-    if car_run_speed < 7.0*w:
+    if car_run_speed < 8.0*w:
         car_run_speed += 0.05*10
     else:
         car_run_speed -= 0.07*10
-
-    drive_value = drive_values()
-    drive_value.steering = steer*180.0/3.141592
+    
+    drive_value = drive_values( )
+    drive_value.steering = steer*0.4*180.0/3.141592
     drive_value.throttle = 5*w
     drive_values_pub.publish(drive_value)
 
