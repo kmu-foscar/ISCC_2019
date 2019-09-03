@@ -282,17 +282,15 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
         std::cout << obstacle_1_started << ' ' << steering << std::endl;
         if(obstacles[idx].y < 0.5 && obstacles[idx].x < 0) obstacle_1_started = 5;
     } else if(obstacle_1_started == 5) {
-    	drive_msg.throttle = 0;
-    	drive_msg.steering = 0;
+    	throttle = 0;
+        steering = 0;
     	drive_msg_pub.publish(drive_msg);
         mode = BASE;
     }
 
-    
-
     //drive_msg.throttle = (int)throttle;
-    drive_msg.throttle = 5;
-    drive_msg.steering = (steering);
+    drive_msg.throttle = throttle;
+    drive_msg.steering = steering;
     drive_msg_pub.publish(drive_msg);
 }
 
