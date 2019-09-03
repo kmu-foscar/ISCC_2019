@@ -217,9 +217,8 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         gps_base_steering = getAngle(v1, v2);
 
         
-    } else if() {
-
     }
+    
     std::cout << current_path_index << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
 }
@@ -228,6 +227,7 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_msg) {
     race::drive_values drive_msg;
     if(mode == STATIC_OBSTACLE_1) {
+        mode_changable = false;
         std::vector<Point> obstacles;
         std::cout << "------------obstacles------------" << std::endl;
         for(int i = 0 ; i < obstacles_msg->circles.size() ; i++) {
@@ -304,6 +304,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
         drive_msg.steering = steering;
         drive_msg_pub.publish(drive_msg);
     } else if(mode == DYNAMIC_OBSTACLE) {
+        mode_changable = false;
         std::vector<Point> obstacles;
         std::cout << "------------obstacles------------" << std::endl;
         for(int i = 0 ; i < obstacles_msg->circles.size() ; i++) {
@@ -342,10 +343,41 @@ void lane_info_callback(const race::lane_info::ConstPtr& msg) {
 void mode_callback(const race::mode::ConstPtr& msg) {
     if(mode_changable == false) return;
 
-    bool gps_on = false;
-    bool lane_detection_on = false;
+    bool gps_flag = false;
+    bool lane_detection_flag = false;
+    bool static_obstacle_flag = false;
+    bool dynamic_obstacle_flag = false;
+    bool parking_flag = false;
+ 
+    unsigned int mode_ = mode->pmode;
+    if(mode%2 == 1) // Parking
+        parking_flag = true;
+    mode>>1;
+    if(mode%2 == 1) // Dynamic Obstacle
+        dynamic_obstacle_flag = true;
+    mode>>1;
+    if(mode%2 == 1) // Static Obstacle
+        static_obstacle_flag = true;
+    mode>>1;
+    if(mode%2 == 1) // Lane Detector
+        lane_detection_flag = true;
+    mode>>1;
+    if(mode%2 == 1) // GPS
+        gps_flag = true;
 
-    
+    if(gps_flag && lane_detection_flag) {
+        mode = BASE_WITH_LANE_DETECTION;
+    }
+    if(gps_flag && !lane_detection_flag) {
+        mode = BASE_WITHOUT_LANE_DETECTION;
+    }
+    if(dynamic_obstacle_flag) {
+        mode = DYNAMIC_OBSTACLE;
+    }
+    if(static_obstacle_flag) {
+        mode = STATIC_OBSTACLE_1;
+    }
+
     if(mode->pstatus == 0) throttle = 0;
     else throttle = 5;
 }
