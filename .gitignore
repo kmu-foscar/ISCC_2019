@@ -8,3 +8,7 @@
 
 # test image
 *.jpg
+
+/src/race/src/__pycache__
+/src/race/src/KMUCS/__pycache__
+*.pyc
