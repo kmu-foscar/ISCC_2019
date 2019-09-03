@@ -121,10 +121,10 @@ void set_path() {
     while(infile >> x >> y) {
         path.push_back(Point(x, y));
         std::cout.precision(11);
-	std::cout << std::fixed << path.back().x << ' ' << path.back().y << std::endl;
-	double cur_dis = cal_distance(path.back(), current_position);
+        std::cout << std::fixed << path.back().x << ' ' << path.back().y << std::endl;
+        double cur_dis = cal_distance(path.back(), current_position);
         if(min_dis > cur_dis) {
-	    min_dis = cur_dis;
+            min_dis = cur_dis;
             current_path_index = path.size()-1;
         }
     }
@@ -284,7 +284,17 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
     } else if(obstacle_1_started == 5) {
     	throttle = 0;
         steering = 0;
-    	drive_msg_pub.publish(drive_msg);
+    	double minimum_dist = 9999999;
+        int nearest_idx = -1;
+        for(int i = 0 ; i < path.size() ; i++) {
+            double cur_dist_ = cal_distance(current_position, path[i]);
+            if(cur_dist_ < minimum_dist) {
+                nearest_idx = i;
+                minimum_dist = cur_dist_;
+            }
+        }
+        std::cout << "nearest_idx : " << nearest_idx << std::endl;
+        current_path_index = nearest_idx;
         mode = BASE;
     }
 
