@@ -7,9 +7,12 @@
 #include "race/mode.h"
 
 // TRAFFIC_LIGHT
-#define TL_RED_AND_RIGHT    10     // 1010
-#define TL_GREEN_AND_RIGHT  3      // 0011
+#define TL_RED              8      // 1000
+#define TL_ORANGE           4      // 0100
+#define TL_LEFT             2      // 0010
 #define TL_GREEN            1      // 0001
+#define TL_RED_AND_LEFT     10     // 1010
+#define TL_GREEN_AND_LEFT   3      // 0011
 
 // 청신호 000X
 // 좌회전 00X0
@@ -126,7 +129,7 @@ int main(void) {
         LANE_DETECT_OFF();
     }
     else if(276 =< gps_point_index && gps_point_index < 300) {
-        LANE_DETECT_ON();
+        LANE_DETECT_ON(); // 꺼도 될듯
     }
     else if(300 =< gps_point_index && gps_point_index < 340) {
         ALL_OFF();
@@ -144,24 +147,22 @@ int main(void) {
         LANE_DETECT_ON();
     }
     else if(550 =< gps_point_index && gps_point_index < 568) {
-        
-        if(is_stopline) {
+        if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
-            if(traffic_light == TL_GREEN) {
-                pstatus =1;
-            }
+        }
+        if(traffic_light == TL_GREEN_AND_LEFT) {
+            pstatus = 1;
         }
     }
     else if(568 =< gps_point_index && gps_point_index < 662) {      // 어린이 보호구역, 교차로 진입
         LANE_DETECT_OFF();
     }
     else if(662 =< gps_point_index && gps_point_index < 701) {      // 어린이 보호구역, 직진
-
-        if(is_stopline) {
+        if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
-            if(traffic_light == TL_RED_AND_RIGHT) {
-                pstatus = 1;
-            }
+        }
+        if(traffic_light == TL_RED_AND_LEFT) {
+            pstatus = 1;
         }
     }
     else if(701 =< gps_point_index && gps_point_index < 764) {      // 어린이 보호구역, 교차로 좌회전
@@ -180,12 +181,11 @@ int main(void) {
         LANE_DETECT_ON();
     }
     else if(913 =< gps_point_index && gps_point_index < 945) {
-
-        if(is_stopline) {
+        if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
-            if(traffic_light == TL_GREEN_AND_RIGHT) {
-                pstatus = 1;
-            }
+        }
+        if(traffic_light == TL_GREEN_AND_LEFT) {
+            pstatus = 1;
         }
     }
     else if(945 =< gps_point_index && gps_point_index < 1015) {
@@ -196,12 +196,11 @@ int main(void) {
         LANE_DETECT_ON();
     }
     else if(1046 =< gps_point_index && gps_point_index < 1063) {
-
-        if(is_stopline) {
+        if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
-            if(traffic_light == TL_GREEN_AND_RIGHT) {
-                pstatus = 1;
-            }
+        }
+        if(traffic_light == TL_GREEN_AND_LEFT) {
+            pstatus = 1;
         }
     }
     else if(1063 =< gps_point_index && gps_point_index < 1161) {
@@ -214,7 +213,7 @@ int main(void) {
     else if(1218 =< gps_point_index && gps_point_index < 1285) {
         LANE_DETECT_OFF();
     }
-    else if(1285 =< gps_point_index && gps_point_index < 1514) {
+    else if(1285 =< gps_point_index) {
         LANE_DETECT_ON();
     }
 
