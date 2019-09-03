@@ -32,7 +32,7 @@ enum { BASE_WITHOUT_LANE_DETECTION, BASE_WITH_LANE_DETECTION, STATIC_OBSTACLE_1,
 
 double path_arrived_threshold = 2.0;
 
-int mode = STATIC_OBSTACLE_1;
+int mode = DYNAMIC_OBSTACLE;
 int current_path_index = 0;
 std::vector<Point> path;
 bool is_path_set = false;
@@ -52,6 +52,7 @@ float y_clipping_threshold = 2.5;
 int obstacle_1_started = 0;
 
 bool dynamic_obstacle_flag = false;
+int dynamc_obstacle_cnt = 0;
 double steering, throttle=5;
 
 
@@ -304,7 +305,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
         for(int i = 0 ; i < obstacles_msg->circles.size() ; i++) {
             float x_pos = obstacles_msg->circles[i].center.x;
             float y_pos = obstacles_msg->circles[i].center.y;
-            if(fabs(y_pos) < y_clipping_threshold) {
+            if(fabs(y_pos) < 1.0) {
                 obstacles.push_back(Point(-y_pos, x_pos));
                 std::cout << obstacles.back().x << ' ' << obstacles.back().y << std::endl;
             }
@@ -314,7 +315,15 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
             dynamic_obstacle_flag = true;
         }
         if(dynamic_obstacle_flag == true && obstacles.size() == 0) {
-            mode = BASE_WITH_LANE_DETECTION;
+        	if(dynamc_obstacle_cnt == 30) {
+        		mode = BASE_WITH_LANE_DETECTION;
+            	throttle = 5;
+            	std::cout << "finish" << std::endl;	
+        	} else {
+        		dynamc_obstacle_cnt++;
+        	}
+        } else if(dynamic_obstacle_flag == true && obstacles.size() != 0) {
+        	dynamc_obstacle_cnt = 0;
         }
         drive_msg.throttle = throttle;
         drive_msg.steering = steering;
