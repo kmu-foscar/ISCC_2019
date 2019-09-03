@@ -27,7 +27,7 @@ struct Point {
     Point(double _x, double _y) : x(_x), y(_y) {}
 };
 
-enum { BASE, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2, DYNAMIC_OBSTACLE};
+enum { BASE_WITHOUT_LANE_DETECTION, BASE_WITH_LANE_DETECTION, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2, DYNAMIC_OBSTACLE};
 
 
 double path_arrived_threshold = 2.0;
@@ -159,18 +159,17 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 
     if(!is_path_set) {
         set_path();
+        return;
     }
 
-    if(mode == BASE && is_path_set) {
+    if(mode == BASE_WITHOUT_LANE_DETECTION) {
         std::vector<Point> v1, v2;
 
-        Point center_point; //(0,0)
+        Point center_point; // (0,0)
         Point temp;
-        // temp.x = 1*cos(front_heading);
-        // temp.y = 1*sin(front_heading);
-
-        temp.x = 1*cos(yaw*3.1415926535/180.0);
-        temp.y = 1*sin(yaw*3.1415926535/180.0);
+        
+        temp.x = 1*cos(yaw*M_PI/180.0);
+        temp.y = 1*sin(yaw*M_PI/180.0);
 
 	    // std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
         std::cout << "yaw : " << yaw << std::endl;
@@ -179,20 +178,13 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         v1.push_back(temp);
         v2.push_back(current_position);
         v2.push_back(path[current_path_index+2]);
-        // v2.push_back(path[current_path_index]);
-
-        // v2.push_back(path[current_path_index+1]);
-
-        // std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
-
+        
         steering = getAngle(v1, v2);
         
-        // drive msg publising 부분
         race::drive_values drive_msg;
         
         throttle = data_transform(-abs(steering), -180, 0, 3, 8);
 
-        //drive_msg.throttle = (int)throttle;
         drive_msg.throttle = 5;
         drive_msg.steering = (steering);
         
@@ -200,21 +192,28 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         std::cout << "steering : " << drive_msg.steering << std::endl;
 
         drive_msg_pub.publish(drive_msg);
-    } else if(mode == STATIC_OBSTACLE_1) {
+    } else if(mode == BASE_WITH_LANE_DETECTION) {
+        float gps_base_steering, lane_detection_base_steering = 0;
 
+        std::vector<Point> v1, v2;
 
-
-        race::drive_values drive_msg;
-
-        drive_msg.throttle = (int)throttle;
-        drive_msg.steering = (-steering*0.5);
+        Point center_point; // (0,0)
+        Point temp;
         
-        // ROS_INFO("steering : %f", steering);
-        std::cout << "steering : " << drive_msg.steering << std::endl;
+        temp.x = 1*cos(yaw*M_PI/180.0);
+        temp.y = 1*sin(yaw*M_PI/180.0);
 
-        drive_msg_pub.publish(drive_msg);
-    } else if(mode == STATIC_OBSTACLE_2){
+        // std::cout << "current_position : " << current_position.x << ' ' << current_position.y << std::endl;
+        std::cout << "yaw : " << yaw << std::endl;
+        // steering 계산 부분
+        v1.push_back(center_point);
+        v1.push_back(temp);
+        v2.push_back(current_position);
+        v2.push_back(path[current_path_index+2]);
+        
+        gps_base_steering = getAngle(v1, v2);
 
+        
     }
     std::cout << current_path_index << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
@@ -294,7 +293,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
             }
             std::cout << "nearest_idx : " << nearest_idx << std::endl;
             current_path_index = nearest_idx;
-            mode = BASE;
+            mode = BASE_WITH_LANE_DETECTION;
         }
         drive_msg.throttle = throttle;
         drive_msg.steering = steering;
@@ -315,7 +314,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
             dynamic_obstacle_flag = true;
         }
         if(dynamic_obstacle_flag == true && obstacles.size() == 0) {
-            mode = BASE;
+            mode = BASE_WITH_LANE_DETECTION;
         }
         drive_msg.throttle = throttle;
         drive_msg.steering = steering;
