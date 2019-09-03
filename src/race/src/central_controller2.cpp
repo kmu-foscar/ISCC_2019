@@ -27,7 +27,7 @@ struct Point {
     Point(double _x, double _y) : x(_x), y(_y) {}
 };
 
-enum { BASE, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2,  };
+enum { BASE, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2, DYNAMIC_OBSTACLE};
 
 
 double path_arrived_threshold = 2.0;
@@ -51,7 +51,7 @@ float rear_heading = 0.0;
 float y_clipping_threshold = 2.5;
 int obstacle_1_started = 0;
 
-
+bool dynamic_obstacle_flag = false;
 double steering, throttle=5;
 
 
@@ -222,86 +222,105 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 
 
 void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_msg) {
-    if(mode != STATIC_OBSTACLE_1) return;
     race::drive_values drive_msg;
-    std::vector<Point> obstacles;
-    std::cout << "------------obstacles------------" << std::endl;
-    for(int i = 0 ; i < obstacles_msg->circles.size() ; i++) {
-        float x_pos = obstacles_msg->circles[i].center.x;
-        float y_pos = obstacles_msg->circles[i].center.y;
-        if(fabs(y_pos) < y_clipping_threshold) {
-            obstacles.push_back(Point(-y_pos, x_pos));
-            std::cout << obstacles.back().x << ' ' << obstacles.back().y << std::endl;
-        }
-    }
-    std::cout << "-----------sorted_obstacles----------" << std::endl;
-    sort(obstacles.begin(), obstacles.end(), point_cmp);
-    if(obstacles.size() <= 0) {
-    	drive_msg.throttle = 5;
-    	drive_msg.steering = 0;
-    	drive_msg_pub.publish(drive_msg);
-    	return;
-    }
-    for(int i = 0 ; i < obstacles.size() ; i++) {
-        std::cout << obstacles[i].x << ' ' << obstacles[i].y << std::endl;
-    }
-
-    if(obstacles[0].x < 0 && obstacle_1_started == 0) {
-        obstacle_1_started = 1;
-    }
-    if(obstacles[0].x >= 0 && obstacle_1_started == 0) {
-        obstacle_1_started = 2;
-    }
-    std::cout << obstacle_1_started << std::endl;
-    if(obstacle_1_started == 1) {
-        int idx = 0;
-        while(obstacles[idx].y < 0.3) idx++;
-        if(idx >= obstacles.size()) return;
-        steering = 43-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
-        std::cout << obstacle_1_started << ' ' << steering << std::endl;
-        if(obstacles[idx].y < 0.5) obstacle_1_started = 3;
-    } else if(obstacle_1_started == 2) {
-        int idx = 0;
-        while(obstacles[idx].y < 0.3) idx++;
-        if(idx >= obstacles.size()) return;
-        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+50);
-        std::cout << obstacle_1_started << ' ' << steering << std::endl;
-        if(obstacles[idx].y < 0.5) obstacle_1_started = 4;
-    } else if(obstacle_1_started == 3) {
-        int idx = 0;
-        while(obstacles[idx].y < 0.3) idx++;
-        if(idx >= obstacles.size()) return;
-        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+50);
-        std::cout << obstacle_1_started << ' ' << steering << std::endl;
-        if(obstacles[idx].y < 0.5 && obstacles[idx].x > 0) obstacle_1_started = 5;
-    } else if(obstacle_1_started == 4) {
-        int idx = 0;
-        while(obstacles[idx].y < 0.3) idx++;
-        if(idx >= obstacles.size()) return;
-        steering = 40-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
-        std::cout << obstacle_1_started << ' ' << steering << std::endl;
-        if(obstacles[idx].y < 0.5 && obstacles[idx].x < 0) obstacle_1_started = 5;
-    } else if(obstacle_1_started == 5) {
-    	throttle = 5;
-        steering = 0;
-    	double minimum_dist = 9999999;
-        int nearest_idx = -1;
-        for(int i = 0 ; i < path.size() ; i++) {
-            double cur_dist_ = cal_distance(current_position, path[i]);
-            if(cur_dist_ < minimum_dist) {
-                nearest_idx = i;
-                minimum_dist = cur_dist_;
+    if(mode == STATIC_OBSTACLE_1) {
+        std::vector<Point> obstacles;
+        std::cout << "------------obstacles------------" << std::endl;
+        for(int i = 0 ; i < obstacles_msg->circles.size() ; i++) {
+            float x_pos = obstacles_msg->circles[i].center.x;
+            float y_pos = obstacles_msg->circles[i].center.y;
+            if(fabs(y_pos) < y_clipping_threshold) {
+                obstacles.push_back(Point(-y_pos, x_pos));
+                std::cout << obstacles.back().x << ' ' << obstacles.back().y << std::endl;
             }
         }
-        std::cout << "nearest_idx : " << nearest_idx << std::endl;
-        current_path_index = nearest_idx;
-        mode = BASE;
+        std::cout << "-----------sorted_obstacles----------" << std::endl;
+        sort(obstacles.begin(), obstacles.end(), point_cmp);
+        if(obstacles.size() <= 0) {
+            drive_msg.throttle = 5;
+            drive_msg.steering = 0;
+            drive_msg_pub.publish(drive_msg);
+            return;
+        }
+        for(int i = 0 ; i < obstacles.size() ; i++) {
+            std::cout << obstacles[i].x << ' ' << obstacles[i].y << std::endl;
+        }
+        if(obstacles[0].x < 0 && obstacle_1_started == 0) {
+            obstacle_1_started = 1;
+        }
+        if(obstacles[0].x >= 0 && obstacle_1_started == 0) {
+            obstacle_1_started = 2;
+        }
+        std::cout << obstacle_1_started << std::endl;
+        if(obstacle_1_started == 1) {
+            int idx = 0;
+            while(obstacles[idx].y < 0.3) idx++;
+            if(idx >= obstacles.size()) return;
+            steering = 43-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
+            std::cout << obstacle_1_started << ' ' << steering << std::endl;
+            if(obstacles[idx].y < 0.5) obstacle_1_started = 3;
+        } else if(obstacle_1_started == 2) {
+            int idx = 0;
+            while(obstacles[idx].y < 0.3) idx++;
+            if(idx >= obstacles.size()) return;
+            steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+50);
+            std::cout << obstacle_1_started << ' ' << steering << std::endl;
+            if(obstacles[idx].y < 0.5) obstacle_1_started = 4;
+        } else if(obstacle_1_started == 3) {
+            int idx = 0;
+            while(obstacles[idx].y < 0.3) idx++;
+            if(idx >= obstacles.size()) return;
+            steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+50);
+            std::cout << obstacle_1_started << ' ' << steering << std::endl;
+            if(obstacles[idx].y < 0.5 && obstacles[idx].x > 0) obstacle_1_started = 5;
+        } else if(obstacle_1_started == 4) {
+            int idx = 0;
+            while(obstacles[idx].y < 0.3) idx++;
+            if(idx >= obstacles.size()) return;
+            steering = 40-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
+            std::cout << obstacle_1_started << ' ' << steering << std::endl;
+            if(obstacles[idx].y < 0.5 && obstacles[idx].x < 0) obstacle_1_started = 5;
+        } else if(obstacle_1_started == 5) {
+            throttle = 5;
+            steering = 0;
+            double minimum_dist = 9999999;
+            int nearest_idx = -1;
+            for(int i = 0 ; i < path.size() ; i++) {
+                double cur_dist_ = cal_distance(current_position, path[i]);
+                if(cur_dist_ < minimum_dist) {
+                    nearest_idx = i;
+                    minimum_dist = cur_dist_;
+                }
+            }
+            std::cout << "nearest_idx : " << nearest_idx << std::endl;
+            current_path_index = nearest_idx;
+            mode = BASE;
+        }
+        drive_msg.throttle = throttle;
+        drive_msg.steering = steering;
+        drive_msg_pub.publish(drive_msg);
+    } else if(mode == DYNAMIC_OBSTACLE) {
+        std::vector<Point> obstacles;
+        std::cout << "------------obstacles------------" << std::endl;
+        for(int i = 0 ; i < obstacles_msg->circles.size() ; i++) {
+            float x_pos = obstacles_msg->circles[i].center.x;
+            float y_pos = obstacles_msg->circles[i].center.y;
+            if(fabs(y_pos) < y_clipping_threshold) {
+                obstacles.push_back(Point(-y_pos, x_pos));
+                std::cout << obstacles.back().x << ' ' << obstacles.back().y << std::endl;
+            }
+        }
+        if(obstacles.size() != 0 && dynamic_obstacle_flag == false) {
+            throttle = 0;
+            dynamic_obstacle_flag = true;
+        }
+        if(dynamic_obstacle_flag == true && obstacles.size() == 0) {
+            mode = BASE;
+        }
+        drive_msg.throttle = throttle;
+        drive_msg.steering = steering;
+        drive_msg_pub.publish(drive_msg);
     }
-
-    //drive_msg.throttle = (int)throttle;
-    drive_msg.throttle = throttle;
-    drive_msg.steering = steering;
-    drive_msg_pub.publish(drive_msg);
 }
 
 void odom_rear_callback(const nav_msgs::Odometry::ConstPtr& odom) {
