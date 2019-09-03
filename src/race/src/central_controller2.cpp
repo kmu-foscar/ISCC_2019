@@ -52,7 +52,7 @@ float y_clipping_threshold = 2.5;
 int obstacle_1_started = 0;
 
 
-double steering, throttle=3;
+double steering, throttle=5;
 
 
 float data_transform(float x, float in_min, float in_max, float out_min, float out_max) // 적외선 센서 데이터 변환 함수
@@ -264,25 +264,25 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
         int idx = 0;
         while(obstacles[idx].y < 0.3) idx++;
         if(idx >= obstacles.size()) return;
-        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+43);
+        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+50);
         std::cout << obstacle_1_started << ' ' << steering << std::endl;
         if(obstacles[idx].y < 0.5) obstacle_1_started = 4;
     } else if(obstacle_1_started == 3) {
         int idx = 0;
         while(obstacles[idx].y < 0.3) idx++;
         if(idx >= obstacles.size()) return;
-        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+60);
+        steering = -((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90+50);
         std::cout << obstacle_1_started << ' ' << steering << std::endl;
         if(obstacles[idx].y < 0.5 && obstacles[idx].x > 0) obstacle_1_started = 5;
     } else if(obstacle_1_started == 4) {
         int idx = 0;
         while(obstacles[idx].y < 0.3) idx++;
         if(idx >= obstacles.size()) return;
-        steering = 20-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
+        steering = 40-((atan2(obstacles[idx].y, obstacles[idx].x)*180.0/M_PI)-90);
         std::cout << obstacle_1_started << ' ' << steering << std::endl;
         if(obstacles[idx].y < 0.5 && obstacles[idx].x < 0) obstacle_1_started = 5;
     } else if(obstacle_1_started == 5) {
-    	throttle = 0;
+    	throttle = 5;
         steering = 0;
     	double minimum_dist = 9999999;
         int nearest_idx = -1;
