@@ -55,6 +55,8 @@ bool dynamic_obstacle_flag = false;
 int dynamc_obstacle_cnt = 0;
 double steering, throttle=5;
 
+bool mode_changable = true;
+
 
 float data_transform(float x, float in_min, float in_max, float out_min, float out_max) // 적외선 센서 데이터 변환 함수
 {
@@ -184,10 +186,10 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         
         race::drive_values drive_msg;
         
-        throttle = data_transform(-abs(steering), -180, 0, 3, 8);
+        // throttle = data_transform(-abs(steering), -180, 0, 3, 8);
 
-        drive_msg.throttle = 5;
-        drive_msg.steering = (steering);
+        drive_msg.throttle = throttle;
+        drive_msg.steering = steering;
         
         // ROS_INFO("steering : %f", steering);
         std::cout << "steering : " << drive_msg.steering << std::endl;
@@ -215,6 +217,8 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         gps_base_steering = getAngle(v1, v2);
 
         
+    } else if() {
+
     }
     std::cout << current_path_index << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
@@ -331,19 +335,19 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
     }
 }
 
-void odom_rear_callback(const nav_msgs::Odometry::ConstPtr& odom) {
-    rear_position.x = odom->pose.pose.position.x;
-    rear_position.y = odom->pose.pose.position.y; 
-    rear_heading = odom->pose.pose.position.z;
-    std::cout << "rear_position : " << rear_position.x << ' ' << rear_position.y << std::endl;
-}
-
 void lane_info_callback(const race::lane_info::ConstPtr& msg) {
 
 }
 
 void mode_callback(const race::mode::ConstPtr& msg) {
-    mode = msg->mode;
+    if(mode_changable == false) return;
+
+    bool gps_on = false;
+    bool lane_detection_on = false;
+
+    
+    if(mode->pstatus == 0) throttle = 0;
+    else throttle = 5;
 }
 
 int main(int argc, char** argv) {
@@ -351,7 +355,6 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh;
 
     ros::Subscriber odom_front_sub = nh.subscribe("odom_front", 1, odom_front_callback);
-    ros::Subscriber odom_rear_sub = nh.subscribe("odom_rear", 1, odom_rear_callback);
     ros::Subscriber lane_info_sub = nh.subscribe("lane_info", 1, lane_info_callback);
     ros::Subscriber mode_sub = nh.subscribe("mode", 1, mode_callback);
     ros::Subscriber imu_sub = nh.subscribe("imu/data", 1, imu_callback);
