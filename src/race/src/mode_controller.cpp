@@ -7,9 +7,12 @@
 #include "race/mode.h"
 
 // TRAFFIC_LIGHT
-#define TL_RED_AND_RIGHT    10     // 1010
-#define TL_GREEN_AND_RIGHT  3      // 0011
+#define TL_RED              8      // 1000
+#define TL_ORANGE           4      // 0100
+#define TL_LEFT             2      // 0010
 #define TL_GREEN            1      // 0001
+#define TL_RED_AND_LEFT     10     // 1010
+#define TL_GREEN_AND_LEFT   3      // 0011
 
 // 청신호 000X
 // 좌회전 00X0
@@ -104,7 +107,6 @@ int main(void) {
     ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
 
     race::mode m;
-
 /*
    +-----------+---------------+-----+
    | BIN       | STATEMENT     | DEC |
@@ -116,59 +118,6 @@ int main(void) {
    | 0000 000X | 주차          | 1   |
    +-----------+---------------+-----+
 */
-
-    if(gps_point_index < ) {
-        // 시작
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-    else if( =< gps_point_index && gps_point_index < ) {
-
-    }
-
     CALCULATE_MODE_FLAG();
 
     // mode 발행
@@ -183,6 +132,115 @@ int main(void) {
 
 void odom_callback(std_msgs::UInt8 msg) {
     gps_point_index = msg.data;
+
+    if(gps_point_index < 117) {
+        GPS_DRIVE_ON();
+    }
+    else if(117 =< gps_point_index && gps_point_index < 218) {
+
+    }
+    else if(218 =< gps_point_index && gps_point_index < 273) {
+
+    }
+    else if(273 =< gps_point_index && gps_point_index < 454) {
+
+    }
+    else if(454 =< gps_point_index && gps_point_index < 508) {
+
+    }
+    else if(508 =< gps_point_index && gps_point_index < 536) {
+
+    }
+    else if(536 =< gps_point_index && gps_point_index < 558) {
+
+    }
+    else if(558 =< gps_point_index && gps_point_index < 647) {
+
+    }
+    else if(647 =< gps_point_index && gps_point_index < 677) {
+
+    }
+    else if(677 =< gps_point_index && gps_point_index < 691) {
+
+    }
+    else if(691 =< gps_point_index && gps_point_index < 743) {
+
+    }
+    else if(743 =< gps_point_index && gps_point_index < 882) {
+
+    }
+    else if(882 =< gps_point_index && gps_point_index < 952) {
+
+    }
+    else if(952 =< gps_point_index && gps_point_index < 988) {
+
+    }
+    else if(988 =< gps_point_index && gps_point_index < 1004) {
+
+    }
+    else if(1004 =< gps_point_index && gps_point_index < 1059) {
+
+    }
+    else if(1059 =< gps_point_index && gps_point_index < 1126) {
+
+    }
+    else if(1126 =< gps_point_index && gps_point_index < 1203) {
+
+    }
+    else if(1203 =< gps_point_index && gps_point_index < 1232) {
+
+    }
+    else if(1232 =< gps_point_index && gps_point_index < 1251) {
+
+    }
+    else if(1251 =< gps_point_index && gps_point_index < 1387) {
+
+    }
+    else if(1387 =< gps_point_index && gps_point_index < 1423) {
+
+    }
+    else if(1423 =< gps_point_index && gps_point_index < 1441) {
+
+    }
+    else if(1441 =< gps_point_index && gps_point_index < 1507) {
+
+    }
+    else if(1507 =< gps_point_index && gps_point_index < 1828) {
+
+    }
+    else if(1828 =< gps_point_index && gps_point_index < 1841) {
+
+    }
+    else if(1841 =< gps_point_index && gps_point_index < 1909) {
+
+    }
+    else if(1909 =< gps_point_index && gps_point_index < 2140) {
+
+    }
+    else if(2140 =< gps_point_index && gps_point_index < 2160) {
+
+    }
+    else if(2160 =< gps_point_index && gps_point_index < 2227) {
+
+    }
+    else if(2227 =< gps_point_index && gps_point_index < 2258) {
+
+    }
+    else if(2258 =< gps_point_index && gps_point_index < 2269) {
+
+    }
+    else if(2269 =< gps_point_index && gps_point_index < 2365) {
+
+    }
+    else if(2365 =< gps_point_index && gps_point_index < 2411) {
+
+    }
+    else if(2411 =< gps_point_index && gps_point_index < 2465) {
+
+    }
+    else if(2465 =< gps_point_index) {
+
+    }
 }
 
 void stopline_callback(std_msgs::UInt8 msg) {

@@ -107,7 +107,6 @@ int main(void) {
     ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
 
     race::mode m;
-
 /*
    +-----------+---------------+-----+
    | BIN       | STATEMENT     | DEC |
@@ -119,6 +118,21 @@ int main(void) {
    | 0000 000X | 주차          | 1   |
    +-----------+---------------+-----+
 */
+    CALCULATE_MODE_FLAG();
+
+    // mode 발행
+    m.status = pstatus;
+    m.mode = pmode;
+
+    mode_pub.publish(m);
+
+    ros::spin();
+    return 0;
+}
+
+void odom_callback(std_msgs::UInt8 msg) {
+
+    gps_point_index = msg.data;
 
     if(gps_point_index < 211) {
         // 
@@ -216,21 +230,6 @@ int main(void) {
     else if(1285 =< gps_point_index) {
         LANE_DETECT_ON();
     }
-
-    CALCULATE_MODE_FLAG();
-
-    // mode 발행
-    m.status = pstatus;
-    m.mode = pmode;
-
-    mode_pub.publish(m);
-
-    ros::spin();
-    return 0;
-}
-
-void odom_callback(std_msgs::UInt8 msg) {
-    gps_point_index = msg.data;
 }
 
 void stopline_callback(std_msgs::UInt8 msg) {
