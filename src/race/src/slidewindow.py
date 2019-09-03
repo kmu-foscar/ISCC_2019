@@ -1,9 +1,9 @@
 import cv2
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 from scipy.interpolate import *
 from matplotlib.pyplot import *
-import math
 
 class SlideWindow:
     def __init__(self):
@@ -33,7 +33,7 @@ class SlideWindow:
 
         # print(nonzerox)
         # init data need to sliding windows
-        margin = 50
+        margin = 30
         minpix = 1
         # print("hello")
         left_lane_inds = []
@@ -42,10 +42,10 @@ class SlideWindow:
         # first location and segmenation location finder
         # draw line
         # 120 120,60 180,80, 180
-        pts_left = np.array([[width/2 - 120, height], [width/2 - 120, 250], [width/2 - 260, 250], [width/2 - 260, height]], np.int32)
+        pts_left = np.array([[100, height], [100, 320], [300, 320], [300, height]], np.int32)
         cv2.polylines(out_img, [pts_left], False, (0,255,0), 1)
 
-        pts_right = np.array([[width/2 + 120, height], [width/2 + 120, 300], [width/2 + 260, 300], [width/2 + 260, height]], np.int32)
+        pts_right = np.array([[550, height], [550, 320], [650, 320], [650, height]], np.int32)
         cv2.polylines(out_img, [pts_right], False, (255,0,0), 1)
         #pts_center = np.array([[width/2 + 120, height], [width/2 + 120, height - 15], [width/2 - 60, height - 231], [width/2 - 60, height]], np.int32)
         #cv2.polylines(out_img, [pts_center], False, (0,0,255), 1)
@@ -56,10 +56,10 @@ class SlideWindow:
         # nonzerox * 0.33 +
         # 130 337 70
         # good_left_inds = ((nonzerox >= width/2 - 300) & (nonzeroy >=  350 - nonzerox * 0.33 ) & (nonzerox <= width/2 - 110)).nonzero()[0]
-        good_left_inds = ((nonzerox >= 145) & (nonzeroy >=  250 ) & (nonzerox <= 300)).nonzero()[0]
+        good_left_inds = ((nonzerox >= 100) & (nonzeroy >=  320 ) & (nonzerox <= 315)).nonzero()[0]
 
         # good_right_inds = ((nonzerox >= width/2 + 110) & (nonzeroy >= 300) & (nonzerox <= width/2 - 110)).nonzero()[0]
-        good_right_inds = ((nonzerox >= 595) & (nonzeroy >= 250) & (nonzerox <= 645)).nonzero()[0]
+        good_right_inds = ((nonzerox >= 550) & (nonzeroy >= 320) & (nonzerox <= 650)).nonzero()[0]
 
         # print(type(good_left_inds))
         # print("good_left_inds", good_right_inds)
@@ -106,8 +106,9 @@ class SlideWindow:
                     # print(nonzerox[good_left_inds[i]], nonzeroy[good_left_inds[i]])
             #
             #
-            # for i in range(len(good_right_inds)):
-            #         img = cv2.circle(out_img, (nonzerox[good_right_inds[i]], nonzeroy[good_right_inds[i]]), 1, (0,0,255), -1)            # window sliding and draw
+            for i in range(len(good_right_inds)):
+                    img = cv2.circle(out_img, (nonzerox[good_right_inds[i]], nonzeroy[good_right_inds[i]]), 1, (0,0,255), -1)            # window sliding and draw
+
             for window in range(0, nwindows):
                 if line_flag == 1:
                     # print("left good")
@@ -129,6 +130,7 @@ class SlideWindow:
 
                     elif nonzeroy[left_lane_inds] != [] and nonzerox[left_lane_inds] != []:
                         p_left = np.polyfit(nonzeroy[left_lane_inds], nonzerox[left_lane_inds], 1)
+                        print("p_left",p_left)
                         x_current = np.int(np.polyval(p_left, win_y_high))
 
                     # 338~344 is for recognize line which is yellow line in processed image(you can check in imshow)
@@ -141,7 +143,7 @@ class SlideWindow:
                     win_x_low = x_current - margin
                     win_x_high = x_current + margin
 
-                    cv2.rectangle(out_img, (win_x_low - int(width * 0.50), win_y_low), (win_x_high - int(width * 0.50), win_y_high), (0, 255, 0), 1)
+                    cv2.rectangle(out_img, (win_x_low - int(width * 0.50), win_y_low), (win_x_high - int(width * 0.50), win_y_high), (0, 0, 255), 1)
                     cv2.rectangle(out_img, (win_x_low, win_y_low), (win_x_high, win_y_high), (255, 0, 0), 1)
 
                     good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_x_low) & (nonzerox < win_x_high)).nonzero()[0]
@@ -190,11 +192,17 @@ class SlideWindow:
         if x_location is not None :
             cv2.circle(out_img,(x_location,340),5,(255,255,255))
 
+        steer = 0
+
         if x_location is not None:
-            dx = 108
+            dx = 500
             dy = width/2 - x_location
-            
+
             steer =  math.atan(dy/dx)
 
-            return out_img, x_location, -steer*0.25
-        return out_img, x_location, 0
+        else:
+            steer = 0
+
+        print("steer : ", steer*180/3.1415)
+
+        return out_img, x_location, steer
