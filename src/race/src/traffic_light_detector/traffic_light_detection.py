@@ -1,5 +1,11 @@
+#!/usr/bin/env python
+
+import rospy
+
 import cv2
 import numpy as np
+from std_msgs.msg import UInt8;
+
 
 # Red Color Range
 HSV_RED_LOWER = np.array([0, 100, 100])
@@ -23,6 +29,9 @@ ACCURACY_COUNT = 10
 zeroModeCnt = 0
 oneModeCnt = 0
 twoModeCnt = 0
+
+rospy.init_node('traffic_light_node')
+trafficLightPub = rospy.Publisher('traffic_light', UInt8, queue_size=1)
 
 while True:
     ret, frame = cap.read()
@@ -152,20 +161,28 @@ while True:
         oneModeCnt = 0
         twoModeCnt = twoModeCnt + 1
 
+
+    msg = UInt8()
     if zeroModeCnt >= ACCURACY_COUNT :
         zeroModeCnt = 0
         oneModeCnt = 0
         twoModeCnt = 0
+        msg.data = 0
+        trafficLightPub.publish(msg)
         print("멈춰")
     elif oneModeCnt >= ACCURACY_COUNT :
         zeroModeCnt = 0
         oneModeCnt = 0
         twoModeCnt = 0
+        msg.data = 1
+        trafficLightPub.publish(msg)
         print("좌회전")
     elif twoModeCnt >= ACCURACY_COUNT:
         zeroModeCnt = 0
         oneModeCnt = 0
         twoModeCnt = 0
+        msg.data = 2
+        trafficLightPub.publish(msg)
         print("멈추지마라")
 
 
