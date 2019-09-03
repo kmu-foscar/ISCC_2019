@@ -15,7 +15,14 @@ HSV_YELLOW_UPPER = np.array([30, 255, 255])
 HSV_GREEN_LOWER = np.array([50, 130, 65])
 HSV_GREEN_UPPER = np.array([120, 255, 255])
 
-cap = cv2.VideoCapture("예선2.mov");
+cap = cv2.VideoCapture("yellow.mov");
+
+# 연속으로 인식해야 메세지 쏴준다.
+ACCURACY_COUNT = 10
+
+zeroModeCnt = 0
+oneModeCnt = 0
+twoModeCnt = 0
 
 while True:
     ret, frame = cap.read()
@@ -38,13 +45,15 @@ while True:
 
     #팽창
     kernel = np.ones((3, 3), np.uint8)
-    grayBinary = cv2.erode(grayBinary, kernel, iterations = 3)
-    grayBinary = cv2.dilate(grayBinary, kernel, iterations = 7)
+    grayBinary = cv2.erode(grayBinary, kernel, iterations = 2)
+    grayBinary = cv2.dilate(grayBinary, kernel, iterations = 9)
 
     mask = cv2.cvtColor(grayBinary, cv2.COLOR_GRAY2BGR)
     cv2.imshow("mask", mask)
 
     mask = cv2.bitwise_and(frame, mask)
+
+    cv2.imshow("magic", mask)
 
 
 
@@ -130,15 +139,37 @@ while True:
 
 
         if redAndYellowPixelCnt and not greenPixelCnt :
-            print("멈춰씨발년아")
+            zeroModeCnt = zeroModeCnt + 1
+            oneModeCnt = 0
+            twoModeCnt = 0
         elif redAndYellowPixelCnt and greenPixelCnt :
-            print("좌회전 조져시발년")
+            zeroModeCnt = 0
+            oneModeCnt = oneModeCnt + 1
+            twoModeCnt = 0
 
     else :
-        print("멈추지마 씨발럼아 노빠꾸다")
+        zeroModeCnt = 0
+        oneModeCnt = 0
+        twoModeCnt = twoModeCnt + 1
+
+    if zeroModeCnt >= ACCURACY_COUNT :
+        zeroModeCnt = 0
+        oneModeCnt = 0
+        twoModeCnt = 0
+        print("멈춰")
+    elif oneModeCnt >= ACCURACY_COUNT :
+        zeroModeCnt = 0
+        oneModeCnt = 0
+        twoModeCnt = 0
+        print("좌회전")
+    elif twoModeCnt >= ACCURACY_COUNT:
+        zeroModeCnt = 0
+        oneModeCnt = 0
+        twoModeCnt = 0
+        print("멈추지마라")
 
 
-    cv2.imshow("sibar", frame)
+    cv2.imshow("frame", frame)
 
     cv2.waitKey(0)
     # if cv2.waitKey(1) == 27:
