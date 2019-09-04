@@ -255,7 +255,7 @@ void odom_callback(std_msgs::Int8 msg) {
         LANE_DETECT_OFF();
     }
     else if(1841 <= gps_point_index && gps_point_index < 1909) {    // 우회전 교차로
-        
+
     }
     else if(1909 <= gps_point_index && gps_point_index < 2140) {
         LANE_DETECT_ON();
@@ -265,7 +265,7 @@ void odom_callback(std_msgs::Int8 msg) {
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_GANG) {                                 // 좌회전 신호에 맞추어 출발
+        else if(tl_msg = TL_GANG) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -281,7 +281,7 @@ void odom_callback(std_msgs::Int8 msg) {
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_GANG) {                                 // 좌회전 신호에 맞추어 출발
+        else if(tl_msg = TL_GANG) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -305,7 +305,7 @@ void stopline_callback(std_msgs::Int8 msg) {
 }
 
 void traffic_sign_callback(std_msgs::Int8 msg) {
-    
+
 }
 
 void traffic_light_callback(std_msgs::Int8 msg) {
@@ -317,7 +317,7 @@ mode msg
 
   status
 0 : 정지
-1 : 진행 
+1 : 진행
 
   mode
 X000 0000 : GPS 자율주행    128
