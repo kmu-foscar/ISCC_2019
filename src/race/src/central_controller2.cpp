@@ -340,7 +340,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
 }
 
 void lane_info_callback(const race::lane_info::ConstPtr& msg) {
-	lane_steering = msg.steering;
+	lane_steering = msg->steering;
 }
 
 void mode_callback(const race::mode::ConstPtr& msg) {

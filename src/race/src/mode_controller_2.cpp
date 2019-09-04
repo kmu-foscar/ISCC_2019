@@ -5,6 +5,10 @@
 #include <std_msgs/UInt8.h>
 #include <nav_msgs/Odometry.h>
 #include "race/mode.h"
+#include <cstdlib>
+#include <fstream>
+#include <cstring>
+#include <iostream>
 
 // TRAFFIC_LIGHT
 //
@@ -16,7 +20,7 @@
 #define TL_LEFT 1
 #define TL_GANG 2
 
-int8_t tl_msg = 0;
+uint8_t tl_msg = 0;
 
 struct Point {
     float x;
@@ -31,6 +35,9 @@ bool is_stopline = 0;           // 0: 정지선 없음, 1: 정지선 인식
 uint8_t pstatus = 0;
 uint8_t pmode = 0;
 
+uint8_t traffic_light = 0;
+std::vector<Point> path;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool gps_drive_flag = false;
@@ -38,6 +45,11 @@ bool lane_detect_flag = false;
 bool static_obstacle_flag = false;
 bool dynamic_obstacle_flag = false;
 bool parking_flag = false;
+
+Point current_position;
+bool is_path_set = false;
+int current_path_index = 0;
+Point initial_position;
 
 void GPS_DRIVE_ON() { gps_drive_flag = true; }
 void GPS_DRIVE_OFF() { gps_drive_flag = false; }
@@ -65,6 +77,35 @@ void TRAFFIC_LIGHT_ON() { pmode += 8; }
 void TRAFFIC_LIGHT_OFF() { pmode -= 8; }
 */
 
+double cal_distance(const Point A, const Point B) {
+    return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
+}
+
+void set_path() {
+    std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path2.txt");
+    std::string line;
+
+    float min_dis = 9999999;
+    float x, y;
+    while(infile >> x >> y) {
+        path.push_back(Point(x, y));
+        std::cout.precision(11);
+        std::cout << std::fixed << path.back().x << ' ' << path.back().y << std::endl;
+        double cur_dis = cal_distance(path.back(), current_position);
+        if(min_dis > cur_dis) {
+            min_dis = cur_dis;
+            current_path_index = path.size()-1;
+        }
+    }
+    initial_position.x = current_position.x;
+    initial_position.y = current_position.y;
+
+    ROS_INFO("path initialized, index : %d, position : %f %f", current_path_index, current_position.x, current_position.y);
+    
+    is_path_set = true;
+}
+
 void ALL_OFF() {
     gps_drive_flag = false;
     lane_detect_flag = false;
@@ -86,7 +127,7 @@ void CALCULATE_MODE_FLAG() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void odom_callback(std_msgs::Int8 msg);
+void odom_callback(const nav_msgs::Odometry::ConstPtr& odom);
 void traffic_light_callback(std_msgs::Int8 msg);
 void traffic_sign_callback(std_msgs::Int8 msg);
 void stopline_callback(std_msgs::Int8 msg);
@@ -127,8 +168,27 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-void odom_callback(std_msgs::Int8 msg) {
-    gps_point_index = msg.data;
+void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
+    current_position.x = odom->pose.pose.position.x;
+    current_position.y = odom->pose.pose.position.y;
+
+    double minimum_dist = 9999999;
+    int nearest_idx = -1;
+    for(int i = 0 ; i < path.size() ; i++) {
+        double cur_dist_ = cal_distance(current_position, path[i]);
+        if(cur_dist_ < minimum_dist) {
+            nearest_idx = i;
+            minimum_dist = cur_dist_;
+        }
+    }
+    std::cout << "nearest_idx : " << nearest_idx << std::endl;
+
+    if(!is_path_set) {
+        set_path();
+        return;
+    }
+
+    gps_point_index = nearest_idx;
 
     if(gps_point_index < 117) {
         GPS_DRIVE_ON();

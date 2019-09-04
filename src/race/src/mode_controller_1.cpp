@@ -5,6 +5,10 @@
 #include <std_msgs/UInt8.h>
 #include <nav_msgs/Odometry.h>
 #include "race/mode.h"
+#include <cstdlib>
+#include <fstream>
+#include <cstring>
+#include <iostream>
 
 // TRAFFIC_LIGHT
 #define TL_RED              8      // 1000
@@ -33,6 +37,7 @@ uint8_t pstatus = 1;
 uint8_t pmode = 0;
 
 uint8_t traffic_light = 0;
+std::vector<Point> path;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +46,11 @@ bool lane_detect_flag = false;
 bool static_obstacle_flag = false;
 bool dynamic_obstacle_flag = false;
 bool parking_flag = false;
+
+Point current_position;
+bool is_path_set = false;
+int current_path_index = 0;
+Point initial_position;
 
 void GPS_DRIVE_ON() { gps_drive_flag = true; }
 void GPS_DRIVE_OFF() { gps_drive_flag = false; }
@@ -68,6 +78,35 @@ void TRAFFIC_LIGHT_ON() { pmode += 8; }
 void TRAFFIC_LIGHT_OFF() { pmode -= 8; }
 */
 
+double cal_distance(const Point A, const Point B) {
+    return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
+}
+
+void set_path() {
+    std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path2.txt");
+    std::string line;
+
+    float min_dis = 9999999;
+    float x, y;
+    while(infile >> x >> y) {
+        path.push_back(Point(x, y));
+        std::cout.precision(11);
+        std::cout << std::fixed << path.back().x << ' ' << path.back().y << std::endl;
+        double cur_dis = cal_distance(path.back(), current_position);
+        if(min_dis > cur_dis) {
+            min_dis = cur_dis;
+            current_path_index = path.size()-1;
+        }
+    }
+    initial_position.x = current_position.x;
+    initial_position.y = current_position.y;
+
+    ROS_INFO("path initialized, index : %d, position : %f %f", current_path_index, current_position.x, current_position.y);
+    
+    is_path_set = true;
+}
+
 void ALL_OFF() {
     gps_drive_flag = false;
     lane_detect_flag = false;
@@ -87,55 +126,27 @@ void CALCULATE_MODE_FLAG() {
     if(parking_flag) { pmode += 1; }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
+    current_position.x = odom->pose.pose.position.x;
+    current_position.y = odom->pose.pose.position.y;
 
-void odom_callback(std_msgs::UInt8 msg);
-void traffic_light_callback(std_msgs::UInt8 msg) {
+    double minimum_dist = 9999999;
+    int nearest_idx = -1;
+    for(int i = 0 ; i < path.size() ; i++) {
+        double cur_dist_ = cal_distance(current_position, path[i]);
+        if(cur_dist_ < minimum_dist) {
+            nearest_idx = i;
+            minimum_dist = cur_dist_;
+        }
+    }
+    std::cout << "nearest_idx : " << nearest_idx << std::endl;
 
-}
-void traffic_sign_callback(std_msgs::UInt8 msg) {
+    if(!is_path_set) {
+        set_path();
+        return;
+    }
 
-}
-
-int main(int argc, char** argv) {
-
-    ros::init(argc, argv, "mode_controller_node_1");
-
-    ros::NodeHandle nh;
-    ros::Subscriber traffic_sign_sub = nh.subscribe("traffic_sign", 1, traffic_sign_callback);
-    ros::Subscriber traffic_light_sub = nh.subscribe("traffic_light", 1, traffic_light_callback);
-    ros::Subscriber stop_line_sub = nh.subscribe("stopline", 1, stopline_callback);
-    ros::Subscriber odom_sub = nh.subscribe("odom", 1, odom_callback);
-
-    ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
-
-    race::mode m;
-/*
-   +-----------+---------------+-----+
-   | BIN       | STATEMENT     | DEC |
-   +-----------+---------------+-----+
-   | 000X 0000 | GPS 자율주행  | 16  |
-   | 0000 X000 | 차선인식      | 8   |
-   | 0000 0X00 | 정적장애물    | 4   |
-   | 0000 00X0 | 동적장애물    | 2   |
-   | 0000 000X | 주차          | 1   |
-   +-----------+---------------+-----+
-*/
-    CALCULATE_MODE_FLAG();
-
-    // mode 발행
-    m.status = pstatus;
-    m.mode = pmode;
-
-    mode_pub.publish(m);
-
-    ros::spin();
-    return 0;
-}
-
-void odom_callback(std_msgs::UInt8 msg) {
-
-    gps_point_index = msg.data;
+    gps_point_index = nearest_idx;
 
     if(gps_point_index < 211) {
         // 
@@ -237,6 +248,51 @@ void odom_callback(std_msgs::UInt8 msg) {
 
 void stopline_callback(std_msgs::UInt8 msg) {
     is_stopline = msg.data;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void traffic_light_callback(std_msgs::UInt8 msg) {
+    traffic_light = msg.data;
+}
+void traffic_sign_callback(std_msgs::UInt8 msg) {
+
+}
+
+int main(int argc, char** argv) {
+
+    ros::init(argc, argv, "mode_controller_node_1");
+
+    ros::NodeHandle nh;
+    ros::Subscriber traffic_sign_sub = nh.subscribe("traffic_sign", 1, traffic_sign_callback);
+    ros::Subscriber traffic_light_sub = nh.subscribe("traffic_light", 1, traffic_light_callback);
+    ros::Subscriber stop_line_sub = nh.subscribe("stopline", 1, stopline_callback);
+    ros::Subscriber odom_sub = nh.subscribe("odom", 1, odom_callback);
+
+    ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
+
+    race::mode m;
+/*
+   +-----------+---------------+-----+
+   | BIN       | STATEMENT     | DEC |
+   +-----------+---------------+-----+
+   | 000X 0000 | GPS 자율주행  | 16  |
+   | 0000 X000 | 차선인식      | 8   |
+   | 0000 0X00 | 정적장애물    | 4   |
+   | 0000 00X0 | 동적장애물    | 2   |
+   | 0000 000X | 주차          | 1   |
+   +-----------+---------------+-----+
+*/
+    CALCULATE_MODE_FLAG();
+
+    // mode 발행
+    m.status = pstatus;
+    m.mode = pmode;
+
+    mode_pub.publish(m);
+
+    ros::spin();
+    return 0;
 }
 
 /*
