@@ -35,7 +35,6 @@ bool is_stopline = 0;           // 0: 정지선 없음, 1: 정지선 인식
 uint8_t pstatus = 0;
 uint8_t pmode = 0;
 
-uint8_t traffic_light = 0;
 std::vector<Point> path;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,17 +64,6 @@ void DYNAMIC_OBSTACLE_OFF() { dynamic_obstacle_flag = false; }
 
 void PARKING_ON() { parking_flag = true; }
 void PARKING_OFF() { parking_flag = false; }
-
-/*
-void STOPLINE_ON() { pmode += 32; }
-void STOPLINE_OFF() { pmode -= 32; }
-
-void TRAFFIC_SIGN_ON() { pmode += 16; }
-void TRAFFIC_SIGN_OFF() { pmode -= 16; }
-
-void TRAFFIC_LIGHT_ON() { pmode += 8; }
-void TRAFFIC_LIGHT_OFF() { pmode -= 8; }
-*/
 
 double cal_distance(const Point A, const Point B) {
     return sqrt((A.x - B.x)*(A.x - B.x) + (A.y - B.y)*(A.y - B.y));
@@ -145,17 +133,7 @@ int main(int argc, char** argv) {
     ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
 
     race::mode m;
-/*
-   +-----------+---------------+-----+
-   | BIN       | STATEMENT     | DEC |
-   +-----------+---------------+-----+
-   | 000X 0000 | GPS 자율주행  | 16  |
-   | 0000 X000 | 차선인식      | 8   |
-   | 0000 0X00 | 정적장애물    | 4   |
-   | 0000 00X0 | 동적장애물    | 2   |
-   | 0000 000X | 주차          | 1   |
-   +-----------+---------------+-----+
-*/
+
     CALCULATE_MODE_FLAG();
 
     // mode 발행
@@ -380,12 +358,15 @@ mode msg
 1 : 진행
 
   mode
-X000 0000 : GPS 자율주행    128
-0X00 0000 : 차선인식        64
-00X0 0000 : 정지선          32
-000X 0000 : 신호등          16
-0000 X000 : 표지판          8
-0000 0X00 : 정적장애물      4
-0000 00X0 : 동적장애물      2
-0000 000X : 주차            1
+
+     +-----------+---------------+-----+
+     | BIN       | STATEMENT     | DEC |
+     +-----------+---------------+-----+
+     | 000X 0000 | GPS 자율주행    | 16  |
+     | 0000 X000 | 차선인식        | 8   |
+     | 0000 0X00 | 정적장애물      | 4   |
+     | 0000 00X0 | 동적장애물      | 2   |
+     | 0000 000X | 주차           | 1   |
+     +-----------+---------------+-----+
+
 */
