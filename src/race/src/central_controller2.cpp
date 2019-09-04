@@ -349,7 +349,7 @@ void mode_callback(const race::mode::ConstPtr& msg) {
     bool dynamic_obstacle_flag = false;
     bool parking_flag = false;
  
-    unsigned int mode_ = mode->pmode;
+    unsigned int mode_ = msg->mode;
     if(mode%2 == 1) // Parking
         parking_flag = true;
     mode>>1;
@@ -378,7 +378,7 @@ void mode_callback(const race::mode::ConstPtr& msg) {
         mode = STATIC_OBSTACLE_1;
     }
 
-    if(mode->pstatus == 0) throttle = 0;
+    if(msg->status == 0) throttle = 0;
     else throttle = 5;
 }
 

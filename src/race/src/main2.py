@@ -8,7 +8,7 @@ import numpy as np
 
 # import roslib
 import sys
-# import rospy
+import rospy
 import math
 import importlib
 # import cPickle
@@ -24,7 +24,7 @@ from slidewindow import SlideWindow
 from warper import Warper
 from pidcal import PidCal
 
-# from race.msg import lane_info, drive_values
+from race.msg import lane_info, drive_values
 
 import os
 
@@ -40,7 +40,7 @@ y_th = 125
 w_th = 140
 g_th = 20
 # lane_info_pub = rospy.Publisher('lane_info', lane_info, queue_size=1)
-# drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
+drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
 
 
 def auto_drive(steer):
@@ -58,25 +58,25 @@ def auto_drive(steer):
     else:
         car_run_speed -= 0.07*10
 
-    # drive_value = drive_values()
-    # drive_value.steering = steer*0.3
-    # drive_value.throttle = 5*w
-    # drive_values_pub.publish(drive_value)
+    drive_value = drive_values()
+    drive_value.steering = steer*0.3
+    drive_value.throttle = 5*w
+    drive_values_pub.publish(drive_value)
 
-    # print('steer: ', steer)
-    # print('speed: ', car_run_speed)
+    print('steer: ', steer)
+    print('speed: ', car_run_speed)
 
 def main():
     # rospy.init_node('lane_detector_goni_node')
     # cap = cv2.VideoCapture("FINAL.avi")
-    cap = cv2.VideoCapture("FINAL2.avi")
+    # cap = cv2.VideoCapture("FINAL2.avi")
     # cap = cv2.VideoCapture("FINAL5.avi")
     # cap = cv2.VideoCapture("TEST11.avi")
     # cap = cv2.VideoCapture("TEST30.avi")
     # cap = cv2.VideoCapture("TEST31.avi")
     # cap = cv2.VideoCapture("SunFeel.avi")
 
-    # cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(1)
     cap.set(3,800)
     cap.set(4,448)
 
