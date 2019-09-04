@@ -93,7 +93,7 @@ void stopline_callback(std_msgs::Int8 msg);
 
 int main(int argc, char** argv) {
 
-    ros::init(argc, argv, "mode_controller_node");
+    ros::init(argc, argv, "mode_controller_node_2");
 
     ros::NodeHandle nh;
     ros::Subscriber traffic_sign_sub = nh.subscribe("traffic_sign", 1, traffic_sign_callback);

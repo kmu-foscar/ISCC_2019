@@ -25,6 +25,7 @@ from warper import Warper
 from pidcal import PidCal
 
 from race.msg import lane_info, drive_values
+from std_msgs.msg import UInt8
 
 import os
 
@@ -39,9 +40,10 @@ car_run_speed = 2
 y_th = 125
 w_th = 140
 g_th = 20
-# lane_info_pub = rospy.Publisher('lane_info', lane_info, queue_size=1)
-drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
 
+lane_info_pub = rospy.Publisher('lane_info', lane_info, queue_size=1)
+drive_values_pub = rospy.Publisher('control_value', drive_values, queue_size=1)
+stop_line_pub = rospy.Publisher('stopline', UInt8, queue_size=1)
 
 def auto_drive(steer):
     global car_run_speed
@@ -58,13 +60,16 @@ def auto_drive(steer):
     else:
         car_run_speed -= 0.07*10
 
-    drive_value = drive_values()
-    drive_value.steering = steer*0.3
-    drive_value.throttle = 5*w
-    drive_values_pub.publish(drive_value)
+    # drive_value = drive_values()
+    # drive_value.steering = steer*0.3
+    # drive_value.throttle = 5*w
+    # drive_values_pub.publish(drive_value)
 
+    lane_info_ = lane_info()
+    lane_info_.steering = steer
+    lane_info_pub.publish(lane_info_)
     print('steer: ', steer)
-    print('speed: ', car_run_speed)
+    # print('speed: ', car_run_speed)
 
 def main():
     # rospy.init_node('lane_detector_goni_node')
@@ -129,7 +134,11 @@ def stop_line(frame):
     lines = cv2.HoughLines(roi_img,1,np.pi/180,100)
     print(lines)
 
+    stop_line_flag = UInt8()
+
     if lines is None:
+        stop_line_flag.data = 0
+        stop_line_pub.publish(stop_line_flag)
         return [-1, -1, -1, -1]
     else :
         for i in range(len(lines)):
@@ -147,8 +156,12 @@ def stop_line(frame):
                     x2 += int(x0 - 1000*(-b))
                     y2 += int(y0 -1000*(a))
         if cnt != 0:
+            stop_line_flag.data = 1
+            stop_line_pub.publish(stop_line_flag)
             return [int(x1/cnt), int(y1/cnt + y), int(x2/cnt), int(y2/cnt + y)]
         else :
+            stop_line_flag.data = 0
+            stop_line_pub.publish(stop_line_flag)
             return [-1, -1, -1, -1]
 
 

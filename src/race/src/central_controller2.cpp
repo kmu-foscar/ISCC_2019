@@ -32,7 +32,9 @@ enum { BASE_WITHOUT_LANE_DETECTION, BASE_WITH_LANE_DETECTION, STATIC_OBSTACLE_1,
 
 double path_arrived_threshold = 2.0;
 
-int mode = DYNAMIC_OBSTACLE;
+int mode = BASE_WITHOUT_LANE_DETECTION;
+
+
 int current_path_index = 0;
 std::vector<Point> path;
 bool is_path_set = false;
@@ -57,6 +59,7 @@ double steering, throttle=5;
 
 bool mode_changable = true;
 
+float lane_steering;
 
 float data_transform(float x, float in_min, float in_max, float out_min, float out_max) // 적외선 센서 데이터 변환 함수
 {
@@ -337,7 +340,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
 }
 
 void lane_info_callback(const race::lane_info::ConstPtr& msg) {
-
+	lane_steering = msg.steering;
 }
 
 void mode_callback(const race::mode::ConstPtr& msg) {

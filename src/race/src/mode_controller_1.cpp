@@ -29,7 +29,7 @@ struct Point {
 int gps_point_index = 0;
 bool is_stopline = 0;           // 0: 정지선 없음, 1: 정지선 인식
 
-uint8_t pstatus = 0;
+uint8_t pstatus = 1;
 uint8_t pmode = 0;
 
 uint8_t traffic_light = 0;
@@ -90,13 +90,16 @@ void CALCULATE_MODE_FLAG() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void odom_callback(std_msgs::UInt8 msg);
-void traffic_light_callback(std_msgs::UInt8 msg);
-void traffic_sign_callback(std_msgs::UInt8 msg);
-void stopline_callback(std_msgs::UInt8 msg);
+void traffic_light_callback(std_msgs::UInt8 msg) {
 
-int main(void) {
+}
+void traffic_sign_callback(std_msgs::UInt8 msg) {
 
-    ros::init(argc, argv, "mode_controller_node");
+}
+
+int main(int argc, char** argv) {
+
+    ros::init(argc, argv, "mode_controller_node_1");
 
     ros::NodeHandle nh;
     ros::Subscriber traffic_sign_sub = nh.subscribe("traffic_sign", 1, traffic_sign_callback);
@@ -139,28 +142,28 @@ void odom_callback(std_msgs::UInt8 msg) {
         GPS_DRIVE_ON();
         LANE_DETECT_ON();
     }
-    else if(211 =< gps_point_index && gps_point_index < 276) {
+    else if(211 <= gps_point_index && gps_point_index < 276) {
         LANE_DETECT_OFF();
     }
-    else if(276 =< gps_point_index && gps_point_index < 300) {
+    else if(276 <= gps_point_index && gps_point_index < 300) {
         LANE_DETECT_ON(); // 꺼도 될듯
     }
-    else if(300 =< gps_point_index && gps_point_index < 340) {
+    else if(300 <= gps_point_index && gps_point_index < 340) {
         ALL_OFF();
         STATIC_OBSTACLE_ON();
     }
-    else if(340 =< gps_point_index && gps_point_index < 460) {
+    else if(340 <= gps_point_index && gps_point_index < 460) {
         ALL_OFF();
         GPS_DRIVE_ON();
         LANE_DETECT_ON();
     }
-    else if(460 =< gps_point_index && gps_point_index < 514) {
+    else if(460 <= gps_point_index && gps_point_index < 514) {
         LANE_DETECT_OFF();
     }
-    else if(514 =< gps_point_index && gps_point_index < 550) {
+    else if(514 <= gps_point_index && gps_point_index < 550) {
         LANE_DETECT_ON();
     }
-    else if(550 =< gps_point_index && gps_point_index < 568) {
+    else if(550 <= gps_point_index && gps_point_index < 568) {
         if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
         }
@@ -168,10 +171,10 @@ void odom_callback(std_msgs::UInt8 msg) {
             pstatus = 1;
         }
     }
-    else if(568 =< gps_point_index && gps_point_index < 662) {      // 어린이 보호구역, 교차로 진입
+    else if(568 <= gps_point_index && gps_point_index < 662) {      // 어린이 보호구역, 교차로 진입
         LANE_DETECT_OFF();
     }
-    else if(662 =< gps_point_index && gps_point_index < 701) {      // 어린이 보호구역, 직진
+    else if(662 <= gps_point_index && gps_point_index < 701) {      // 어린이 보호구역, 직진
         if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
         }
@@ -179,22 +182,22 @@ void odom_callback(std_msgs::UInt8 msg) {
             pstatus = 1;
         }
     }
-    else if(701 =< gps_point_index && gps_point_index < 764) {      // 어린이 보호구역, 교차로 좌회전
+    else if(701 <= gps_point_index && gps_point_index < 764) {      // 어린이 보호구역, 교차로 좌회전
         ALL_OFF();
         GPS_DRIVE_ON();
     }
-    else if(764 =< gps_point_index && gps_point_index < 787) {
+    else if(764 <= gps_point_index && gps_point_index < 787) {
         DYNAMIC_OBSTACLE_ON();
     }
-    else if(787 =< gps_point_index && gps_point_index < 831) {
+    else if(787 <= gps_point_index && gps_point_index < 831) {
 
     }
-    else if(831 =< gps_point_index && gps_point_index < 913) {
+    else if(831 <= gps_point_index && gps_point_index < 913) {
         ALL_OFF();
         GPS_DRIVE_ON();
         LANE_DETECT_ON();
     }
-    else if(913 =< gps_point_index && gps_point_index < 945) {
+    else if(913 <= gps_point_index && gps_point_index < 945) {
         if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
         }
@@ -202,14 +205,14 @@ void odom_callback(std_msgs::UInt8 msg) {
             pstatus = 1;
         }
     }
-    else if(945 =< gps_point_index && gps_point_index < 1015) {
+    else if(945 <= gps_point_index && gps_point_index < 1015) {
         ALL_OFF();
         GPS_DRIVE_ON();
     }
-    else if(1015 =< gps_point_index && gps_point_index < 1046) {
+    else if(1015 <= gps_point_index && gps_point_index < 1046) {
         LANE_DETECT_ON();
     }
-    else if(1046 =< gps_point_index && gps_point_index < 1063) {
+    else if(1046 <= gps_point_index && gps_point_index < 1063) {
         if(is_stopline && (traffic_light == TL_RED || traffic_light == TL_ORANGE)) {
             pstatus = 0;
         }
@@ -217,17 +220,17 @@ void odom_callback(std_msgs::UInt8 msg) {
             pstatus = 1;
         }
     }
-    else if(1063 =< gps_point_index && gps_point_index < 1161) {
+    else if(1063 <= gps_point_index && gps_point_index < 1161) {
         ALL_OFF();
         GPS_DRIVE_ON();
     }
-    else if(1161 =< gps_point_index && gps_point_index < 1218) {
+    else if(1161 <= gps_point_index && gps_point_index < 1218) {
         LANE_DETECT_ON();
     }
-    else if(1218 =< gps_point_index && gps_point_index < 1285) {
+    else if(1218 <= gps_point_index && gps_point_index < 1285) {
         LANE_DETECT_OFF();
     }
-    else if(1285 =< gps_point_index) {
+    else if(1285 <= gps_point_index) {
         LANE_DETECT_ON();
     }
 }

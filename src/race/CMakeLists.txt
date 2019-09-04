@@ -154,7 +154,8 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/race_node.cpp)
 add_executable(serial_control_node src/serial_control.cpp)
 add_executable(ackermann_msg_to_drive_msg_node src/ackermann_msg_to_drive_msg.cpp)
-add_executable(mode_controller_node src/mode_controller.cpp)
+add_executable(mode_controller_node_1 src/mode_controller_1.cpp)
+add_executable(mode_controller_node_2 src/mode_controller_2.cpp)
 add_executable(central_controller_node src/central_controller.cpp)
 add_executable(lane_detector_node src/lane_detector.cpp)
 add_executable(central_controller_node2 src/central_controller2.cpp)
@@ -176,7 +177,10 @@ add_dependencies(ackermann_msg_to_drive_msg_node
 add_dependencies(serial_control_node
   race_generate_messages_cpp
 )
-add_dependencies(mode_controller_node
+add_dependencies(mode_controller_node_1
+  race_generate_messages_cpp
+)
+add_dependencies(mode_controller_node_2
   race_generate_messages_cpp
 )
 add_dependencies(central_controller_node
@@ -198,7 +202,10 @@ target_link_libraries(ackermann_msg_to_drive_msg_node
 target_link_libraries(serial_control_node
   ${catkin_LIBRARIES}
 )
-target_link_libraries(mode_controller_node
+target_link_libraries(mode_controller_node_1
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(mode_controller_node_2
   ${catkin_LIBRARIES}
 )
 target_link_libraries(central_controller_node
