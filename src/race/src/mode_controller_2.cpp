@@ -102,7 +102,7 @@ void set_path() {
     initial_position.y = current_position.y;
 
     ROS_INFO("path initialized, index : %d, position : %f %f", current_path_index, current_position.x, current_position.y);
-    
+
     is_path_set = true;
 }
 
