@@ -71,7 +71,7 @@ double cal_distance(const Point A, const Point B) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path_real.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path_real_final.txt");
     std::string line;
 
     float min_dis = 9999999;
@@ -111,6 +111,7 @@ void CALCULATE_MODE_FLAG() {
     if(static_obstacle_flag) { pmode += 4; }
     if(dynamic_obstacle_flag) { pmode += 2; }
     if(parking_flag) { pmode += 1; }
+    std::cout << "pmode : " << (int)pmode << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,27 +121,19 @@ void traffic_light_callback(std_msgs::Int8 msg);
 void traffic_sign_callback(std_msgs::Int8 msg);
 void stopline_callback(std_msgs::Int8 msg);
 
+ros::Publisher mode_pub;
+
 int main(int argc, char** argv) {
 
     ros::init(argc, argv, "mode_controller_node_2");
 
     ros::NodeHandle nh;
+    mode_pub = nh.advertise<race::mode>("mode", 1);
+
     ros::Subscriber traffic_sign_sub = nh.subscribe("traffic_sign", 1, traffic_sign_callback);
     ros::Subscriber traffic_light_sub = nh.subscribe("traffic_light", 1, traffic_light_callback);
     ros::Subscriber stop_line_sub = nh.subscribe("stopline", 1, stopline_callback);
-    ros::Subscriber odom_sub = nh.subscribe("odom", 1, odom_callback);
-
-    ros::Publisher mode_pub = nh.advertise<race::mode>("mode", 1);
-
-    race::mode m;
-
-    CALCULATE_MODE_FLAG();
-
-    // mode 발행
-    m.status = pstatus;
-    m.mode = pmode;
-
-    mode_pub.publish(m);
+    ros::Subscriber odom_sub = nh.subscribe("odom_front", 1, odom_callback);
 
     ros::spin();
     return 0;
@@ -149,6 +142,11 @@ int main(int argc, char** argv) {
 void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     current_position.x = odom->pose.pose.position.x;
     current_position.y = odom->pose.pose.position.y;
+
+    if(!is_path_set) {
+        set_path();
+        return;
+    }
 
     double minimum_dist = 9999999;
     int nearest_idx = -1;
@@ -161,34 +159,20 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     }
     std::cout << "nearest_idx : " << nearest_idx << std::endl;
 
-    if(!is_path_set) {
-        set_path();
-        return;
-    }
-
     gps_point_index = nearest_idx;
 
-    if(gps_point_index < 117) {
+    if(gps_point_index < 70) {
         GPS_DRIVE_ON();
-        LANE_DETECT_ON();
     }
-    else if(117 <= gps_point_index && gps_point_index < 218) {
-        // PARKING_ON();
+    else if(70 <= gps_point_index && gps_point_index < 80) {
+        PARKING_ON();
     }
-    else if(218 <= gps_point_index && gps_point_index < 273) {
-        LANE_DETECT_OFF();
+    else if(80 <= gps_point_index && gps_point_index < 228) {
+        PARKING_OFF();
+        GPS_DRIVE_ON();
     }
-    else if(273 <= gps_point_index && gps_point_index < 454) {
-        LANE_DETECT_ON();
-    }
-    else if(454 <= gps_point_index && gps_point_index < 508) {      // 교차로 우회전
-        LANE_DETECT_OFF();
-    }
-    else if(508 <= gps_point_index && gps_point_index < 536) {
-        LANE_DETECT_ON();
-    }
-    else if(536 <= gps_point_index && gps_point_index < 558) {      // 좌회전 교차로 전
-        if(tl_msg = TL_STOP && is_stopline) {                       // 적신호일때 정지선에 멈춘다.
+    else if(228 <= gps_point_index && gps_point_index < 237) {      
+        if(tl_msg = TL_STOP && is_stopline) { 
             pstatus = 0;
             ALL_OFF();
         }
@@ -197,14 +181,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
             GPS_DRIVE_ON();
         }
     }
-    else if(558 <= gps_point_index && gps_point_index < 647) {      // 교차로 좌회전
-        // GPS_DRIVE_ONLY
+    else if(237 <= gps_point_index && gps_point_index < 275) { 
+        GPS_DRIVE_ON();
     }
-    else if(647 <= gps_point_index && gps_point_index < 677) {
-        LANE_DETECT_ON();
-    }
-    else if(677 <= gps_point_index && gps_point_index < 691) {      // 직진 교차로 전
-        if(tl_msg = TL_STOP && is_stopline) {                       // 적신호일때 정지선에 멈춘다.
+    else if(275 <= gps_point_index && gps_point_index < 282) {   
+        if(tl_msg = TL_STOP && is_stopline) {                     
             pstatus = 0;
             ALL_OFF();
         }
@@ -213,26 +194,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
             GPS_DRIVE_ON();
         }
     }
-    else if(691 <= gps_point_index && gps_point_index < 743) {
+    else if(282 <= gps_point_index && gps_point_index < 397) {
         // GPS_DRIVE_ONLY
     }
-    else if(743 <= gps_point_index && gps_point_index < 882) {
-        ALL_OFF();
-        LANE_DETECT_ON();
-        GPS_DRIVE_ON();
-    }
-    else if(882 <= gps_point_index && gps_point_index < 952) {      // 정적 장애물(대형버스)
-        ALL_OFF();
-        GPS_DRIVE_ON();
-        STATIC_OBSTACLE_ON();
-    }
-    else if(952 <= gps_point_index && gps_point_index < 988) {
-        ALL_OFF();
-        GPS_DRIVE_ON();
-        LANE_DETECT_ON();
-    }
-    else if(988 <= gps_point_index && gps_point_index < 1004) {     // 직진 교차로 전
-        if(tl_msg = TL_STOP && is_stopline) {                       // 적신호일때 정지선에 멈춘다.
+    else if(397 <= gps_point_index && gps_point_index < 407) {
+        if(tl_msg = TL_STOP && is_stopline) {                     
             pstatus = 0;
             ALL_OFF();
         }
@@ -241,22 +207,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
             GPS_DRIVE_ON();
         }
     }
-    else if(1004 <= gps_point_index && gps_point_index < 1059) {    // 교차로 진입
+    else if(407 <= gps_point_index && gps_point_index < 484) {
         // GPS_DRIVE_ONLY
     }
-    else if(1059 <= gps_point_index && gps_point_index < 1126) {    // 교차로 탈출
-        ALL_OFF();
-        GPS_DRIVE_ON();
-        LANE_DETECT_ON();
-    }
-    else if(1126 <= gps_point_index && gps_point_index < 1203) {
-        LANE_DETECT_OFF();
-    }
-    else if(1203 <= gps_point_index && gps_point_index < 1232) {
-        LANE_DETECT_ON();
-    }
-    else if(1232 <= gps_point_index && gps_point_index < 1251) {    // 좌회전 교차로 전
-        if(tl_msg = TL_STOP && is_stopline) {                       // 적신호일때 정지선에 멈춘다.
+    else if(484 <= gps_point_index && gps_point_index < 493) {  
+        if(tl_msg = TL_STOP && is_stopline) {                    
             pstatus = 0;
             ALL_OFF();
         }
@@ -265,77 +220,62 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
             GPS_DRIVE_ON();
         }
     }
-    else if(1251 <= gps_point_index && gps_point_index < 1387) {    // 교차로 진입
+    else if(493 <= gps_point_index && gps_point_index < 555) {    
         // GPS_DRIVE_ONLY
     }
-    else if(1387 <= gps_point_index && gps_point_index < 1423) {    // 교차로 탈출
-        ALL_OFF();
-        GPS_DRIVE_ON();
-        LANE_DETECT_ON();
-    }
-    else if(1423 <= gps_point_index && gps_point_index < 1441) {    // 좌회전 교차로 전
-        if(tl_msg = TL_STOP && is_stopline) {                       // 적신호일때 정지선에 멈춘다.
+    else if(555 <= gps_point_index && gps_point_index < 565) {   
+        if(tl_msg = TL_STOP && is_stopline) {                     
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_LEFT) {                                 // 좌회전 신호에 맞추어 출발
+        else if(tl_msg = TL_LEFT) {                                
             pstatus = 1;
             GPS_DRIVE_ON();
         }
     }
-    else if(1441 <= gps_point_index && gps_point_index < 1507) {
+    else if(565 <= gps_point_index && gps_point_index < 790) {
         // GPS_DRIVE_ONLY
     }
-    else if(1507 <= gps_point_index && gps_point_index < 1828) {
-        LANE_DETECT_ON();
+    else if(790 <= gps_point_index && gps_point_index < 800) {
+        if(tl_msg = TL_STOP && is_stopline) {    
+            pstatus = 0;
+            ALL_OFF();
+        }
+        else if(tl_msg = TL_GANG) {
+            pstatus = 1;
+            GPS_DRIVE_ON();
+        }
     }
-    else if(1828 <= gps_point_index && gps_point_index < 1841) {
-        LANE_DETECT_OFF();
+    else if(800 <= gps_point_index && gps_point_index < 830) {    // 교차로(직진)
+        // GPS_DRIVE_ONLY
     }
-    else if(1841 <= gps_point_index && gps_point_index < 1909) {    // 우회전 교차로
+    else if(830 <= gps_point_index && gps_point_index < 835) {
+        if(tl_msg = TL_STOP && is_stopline) {               
+            pstatus = 0;
+            ALL_OFF();
+        }
+        else if(tl_msg = TL_GANG) {
+            pstatus = 1;
+            GPS_DRIVE_ON();
+        }
+    }
+    else if(835 <= gps_point_index && gps_point_index < 961) {
+        // GPS_DRIVE_ONLY
+    }
+    else if(961 <= gps_point_index) {
+        // GPS_DRIVE_ONLY
+    }
 
-    }
-    else if(1909 <= gps_point_index && gps_point_index < 2140) {
-        LANE_DETECT_ON();
-    }
-    else if(2140 <= gps_point_index && gps_point_index < 2160) {    // 직진 교차로 전
-        if(tl_msg = TL_STOP && is_stopline) {                       // 적신호일때 정지선에 멈춘다.
-            pstatus = 0;
-            ALL_OFF();
-        }
-        else if(tl_msg = TL_GANG) {
-            pstatus = 1;
-            GPS_DRIVE_ON();
-        }
-    }
-    else if(2160 <= gps_point_index && gps_point_index < 2227) {    // 교차로(직진)
-        // GPS_DRIVE_ONLY
-    }
-    else if(2227 <= gps_point_index && gps_point_index < 2258) {
-        LANE_DETECT_ON();
-    }
-    else if(2258 <= gps_point_index && gps_point_index < 2269) {
-        if(tl_msg = TL_STOP && is_stopline) {                       // 적신호일때 정지선에 멈춘다.
-            pstatus = 0;
-            ALL_OFF();
-        }
-        else if(tl_msg = TL_GANG) {
-            pstatus = 1;
-            GPS_DRIVE_ON();
-        }
-    }
-    else if(2269 <= gps_point_index && gps_point_index < 2365) {    // 교차로
-        // GPS_DRIVE_ONLY
-    }
-    else if(2365 <= gps_point_index && gps_point_index < 2411) {
-        // GPS_DRIVE_ONLY
-    }
-    else if(2411 <= gps_point_index && gps_point_index < 2465) {
-        // GPS_DRIVE_ONLY
-    }
-    else if(2465 <= gps_point_index) {
-        // GPS_DRIVE_ONLY
-    }
+    race::mode m;
+
+    CALCULATE_MODE_FLAG();
+
+    // mode 발행
+    m.status = pstatus;
+    m.mode = pmode;
+
+    mode_pub.publish(m);
+
 }
 
 void stopline_callback(std_msgs::Int8 msg) {

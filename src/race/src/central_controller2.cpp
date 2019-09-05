@@ -119,7 +119,7 @@ bool operator<(geometry_msgs::Point A, geometry_msgs::Point B) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path_real.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path_real_final.txt");
     std::string line;
 
     float min_dis = 9999999;
@@ -148,8 +148,8 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr& msg) {
 
 
 void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
-    current_position.x = odom->pose.pose.position.x-0.7;
-    current_position.y = odom->pose.pose.position.y-0.3;
+    current_position.x = odom->pose.pose.position.x;
+    current_position.y = odom->pose.pose.position.y;
     front_heading = odom->pose.pose.position.z;
 
     double minimum_dist = 9999999;
@@ -222,7 +222,7 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         
     }
     
-    std::cout << current_path_index << std::endl;
+    std::cout << current_path_index << ' ' << cal_distance(current_position, path[current_path_index]) << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
 }
 
@@ -380,6 +380,9 @@ void mode_callback(const race::mode::ConstPtr& msg) {
     if(static_obstacle_flag) {
         mode = STATIC_OBSTACLE_1;
     }
+
+    std::cout << "mode : " << mode << std::endl;
+    std::cout << "throttle : " << mode << std::endl;
 
     if(msg->status == 0) throttle = 0;
     else throttle = 5;
