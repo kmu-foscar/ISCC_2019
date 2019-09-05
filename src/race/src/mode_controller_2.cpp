@@ -1,7 +1,6 @@
 // 본선
 
 #include <ros/ros.h>
-#include <std_msgs/Int8.h>
 #include <std_msgs/UInt8.h>
 #include <nav_msgs/Odometry.h>
 #include "race/mode.h"
@@ -30,7 +29,7 @@ struct Point {
 };
 
 int gps_point_index = 0;
-bool is_stopline = 0;           // 0: 정지선 없음, 1: 정지선 인식
+bool is_stopline = false;           // 0: 정지선 없음, 1: 정지선 인식
 
 uint8_t pstatus = 0;
 uint8_t pmode = 0;
@@ -112,14 +111,15 @@ void CALCULATE_MODE_FLAG() {
     if(dynamic_obstacle_flag) { pmode += 2; }
     if(parking_flag) { pmode += 1; }
     std::cout << "pmode : " << (int)pmode << std::endl;
+    std::cout << "pstatus : " << (int)pstatus << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void odom_callback(const nav_msgs::Odometry::ConstPtr& odom);
-void traffic_light_callback(std_msgs::Int8 msg);
-void traffic_sign_callback(std_msgs::Int8 msg);
-void stopline_callback(std_msgs::Int8 msg);
+void traffic_light_callback(std_msgs::UInt8 msg);
+void traffic_sign_callback(std_msgs::UInt8 msg);
+void stopline_callback(std_msgs::UInt8 msg);
 
 ros::Publisher mode_pub;
 
@@ -165,6 +165,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         GPS_DRIVE_ON();
     }
     else if(70 <= gps_point_index && gps_point_index < 80) {
+        GPS_DRIVE_OFF();
         PARKING_ON();
     }
     else if(80 <= gps_point_index && gps_point_index < 228) {
@@ -172,11 +173,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         GPS_DRIVE_ON();
     }
     else if(228 <= gps_point_index && gps_point_index < 237) {      
-        if(tl_msg = TL_STOP && is_stopline) { 
+        if(tl_msg == TL_STOP && is_stopline == true) { 
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_GANG) {
+        else if(tl_msg == TL_LEFT) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -185,11 +186,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         GPS_DRIVE_ON();
     }
     else if(275 <= gps_point_index && gps_point_index < 282) {   
-        if(tl_msg = TL_STOP && is_stopline) {                     
+        if(tl_msg == TL_STOP && is_stopline == true) {                     
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_GANG) {
+        else if(tl_msg == TL_GANG) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -198,11 +199,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // GPS_DRIVE_ONLY
     }
     else if(397 <= gps_point_index && gps_point_index < 407) {
-        if(tl_msg = TL_STOP && is_stopline) {                     
+        if(tl_msg == TL_STOP && is_stopline == true) {                     
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_GANG) {
+        else if(tl_msg == TL_GANG) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -211,11 +212,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // GPS_DRIVE_ONLY
     }
     else if(484 <= gps_point_index && gps_point_index < 493) {  
-        if(tl_msg = TL_STOP && is_stopline) {                    
+        if(tl_msg == TL_STOP && is_stopline == true) {                    
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_LEFT) {
+        else if(tl_msg == TL_LEFT) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -224,11 +225,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // GPS_DRIVE_ONLY
     }
     else if(555 <= gps_point_index && gps_point_index < 565) {   
-        if(tl_msg = TL_STOP && is_stopline) {                     
+        if(tl_msg == TL_STOP && is_stopline == true) {                     
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_LEFT) {                                
+        else if(tl_msg == TL_LEFT) {                                
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -237,11 +238,11 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // GPS_DRIVE_ONLY
     }
     else if(790 <= gps_point_index && gps_point_index < 800) {
-        if(tl_msg = TL_STOP && is_stopline) {    
+        if(tl_msg == TL_STOP && is_stopline == true) {    
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_GANG) {
+        else if(tl_msg == TL_GANG) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
@@ -250,20 +251,22 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         // GPS_DRIVE_ONLY
     }
     else if(830 <= gps_point_index && gps_point_index < 835) {
-        if(tl_msg = TL_STOP && is_stopline) {               
+        if(tl_msg == TL_STOP && is_stopline == true) {               
             pstatus = 0;
             ALL_OFF();
         }
-        else if(tl_msg = TL_GANG) {
+        else if(tl_msg == TL_GANG) {
             pstatus = 1;
             GPS_DRIVE_ON();
         }
     }
     else if(835 <= gps_point_index && gps_point_index < 961) {
         // GPS_DRIVE_ONLY
+        GPS_DRIVE_ON();
     }
     else if(961 <= gps_point_index) {
         // GPS_DRIVE_ONLY
+        GPS_DRIVE_ON();
     }
 
     race::mode m;
@@ -278,15 +281,18 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
 
 }
 
-void stopline_callback(std_msgs::Int8 msg) {
-    is_stopline = msg.data;
+void stopline_callback(std_msgs::UInt8 msg) {
+    if(msg.data == 0)
+        is_stopline = false;
+    if(msg.data == 1)
+        is_stopline = true;
 }
 
-void traffic_sign_callback(std_msgs::Int8 msg) {
+void traffic_sign_callback(std_msgs::UInt8 msg) {
 
 }
 
-void traffic_light_callback(std_msgs::Int8 msg) {
+void traffic_light_callback(std_msgs::UInt8 msg) {
     tl_msg = msg.data;
 }
 

@@ -27,7 +27,7 @@ struct Point {
     Point(double _x, double _y) : x(_x), y(_y) {}
 };
 
-enum { BASE_WITHOUT_LANE_DETECTION, BASE_WITH_LANE_DETECTION, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2, DYNAMIC_OBSTACLE};
+enum { BASE_WITHOUT_LANE_DETECTION, BASE_WITH_LANE_DETECTION, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2, DYNAMIC_OBSTACLE, PARKING};
 
 
 double path_arrived_threshold = 2.0;
@@ -380,11 +380,18 @@ void mode_callback(const race::mode::ConstPtr& msg) {
     if(static_obstacle_flag) {
         mode = STATIC_OBSTACLE_1;
     }
+    if(parking_flag) {
+    	mode = PARKING;
+    }
 
     std::cout << "mode : " << mode << std::endl;
-    std::cout << "throttle : " << mode << std::endl;
+    std::cout << "throttle : " << throttle << std::endl;
 
-    if(msg->status == 0) throttle = 0;
+    if(msg->status == 0) {
+    	if(throttle > 0)
+    		throttle -= 0.5;
+    	else throttle = 0;
+    }
     else throttle = 5;
 }
 
