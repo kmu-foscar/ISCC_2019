@@ -29,7 +29,6 @@ struct Point {
 
 enum { BASE_WITHOUT_LANE_DETECTION, BASE_WITH_LANE_DETECTION, STATIC_OBSTACLE_1, STATIC_OBSTACLE_2, DYNAMIC_OBSTACLE, PARKING};
 
-
 double path_arrived_threshold = 2.0;
 
 int mode = BASE_WITHOUT_LANE_DETECTION;
@@ -60,6 +59,9 @@ double steering, throttle=5;
 bool mode_changable = true;
 
 float lane_steering;
+
+bool is_parked = false;
+bool is_park_mode_finish = false;
 
 float data_transform(float x, float in_min, float in_max, float out_min, float out_max) // 적외선 센서 데이터 변환 함수
 {
@@ -218,10 +220,42 @@ void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
         v2.push_back(path[current_path_index+2]);
         
         gps_base_steering = getAngle(v1, v2);
+    } else if(mode == PARKING) {
+    	race::drive_values drive_msg;
+    	if(!is_parked){
+    		if(yaw > 10) {
+        		drive_msg.throttle = 5;
+        		drive_msg.steering = 15.0;
+    		} else {
+    			is_parked = true;
+    			drive_msg.throttle = 0;
+        		drive_msg.steering = 0.0;
+        		usleep(5000 * 1000);
+    		}
+    	} else {
+    		if(yaw < 55 && is_parked == true) {
+	    		drive_msg.throttle = -5;
+        		drive_msg.steering = 15.0;
+    		} else {
+    			is_park_mode_finish = true;	
+    			double minimum_dist = 9999999;
+    		}
+    	}
 
-        
+    	if(is_park_mode_finish) {
+    		int nearest_idx = -1;
+		    for(int i = 0 ; i < path.size() ; i++) {
+		        double cur_dist_ = cal_distance(current_position, path[i]);
+		        if(cur_dist_ < minimum_dist) {
+		            nearest_idx = i;
+		            minimum_dist = cur_dist_;
+		        }
+		    }
+    		current_path_index = nearest_idx;
+    	}
+    	drive_msg_pub.publish(drive_msg);
     }
-    
+
     std::cout << current_path_index << ' ' << cal_distance(current_position, path[current_path_index]) << std::endl;
     if(cal_distance(current_position, path[current_path_index]) < path_arrived_threshold) current_path_index++;
 }
@@ -382,6 +416,7 @@ void mode_callback(const race::mode::ConstPtr& msg) {
     }
     if(parking_flag) {
     	mode = PARKING;
+    	mode_changable = false;
     }
 
     std::cout << "mode : " << mode << std::endl;

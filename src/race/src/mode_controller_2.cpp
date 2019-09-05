@@ -49,6 +49,8 @@ bool is_path_set = false;
 int current_path_index = 0;
 Point initial_position;
 
+bool is_parked = false;
+
 void GPS_DRIVE_ON() { gps_drive_flag = true; }
 void GPS_DRIVE_OFF() { gps_drive_flag = false; }
 
@@ -164,11 +166,17 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr& odom) {
     if(gps_point_index < 70) {
         GPS_DRIVE_ON();
     }
-    else if(70 <= gps_point_index && gps_point_index < 80) {
-        GPS_DRIVE_OFF();
-        PARKING_ON();
+    else if(gps_point_index == 70) {
+        if(!is_parked) {
+            GPS_DRIVE_OFF();
+            PARKING_ON();
+            is_parked = true;
+        } else {
+            PARKING_OFF();
+            GPS_DRIVE_ON();
+        }  
     }
-    else if(80 <= gps_point_index && gps_point_index < 228) {
+    else if(71 <= gps_point_index && gps_point_index < 228) {
         PARKING_OFF();
         GPS_DRIVE_ON();
     }
