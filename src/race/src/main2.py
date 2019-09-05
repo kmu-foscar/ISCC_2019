@@ -81,7 +81,7 @@ def main():
     # cap = cv2.VideoCapture("TEST31.avi")
     # cap = cv2.VideoCapture("SunFeel.avi")
 
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     cap.set(3,800)
     cap.set(4,448)
 

@@ -71,7 +71,7 @@ double cal_distance(const Point A, const Point B) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path2.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path_real.txt");
     std::string line;
 
     float min_dis = 9999999;

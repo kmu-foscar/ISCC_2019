@@ -72,7 +72,7 @@ struct TrafficLight {
 };
 
 int main(int argc, char** argv) {
-    VideoCapture cap("test.mov");
+    VideoCapture cap(1);
     if (!cap.isOpened()) return -1;
 
     while(1) {

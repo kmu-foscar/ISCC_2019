@@ -21,7 +21,7 @@ HSV_YELLOW_UPPER = np.array([30, 255, 255])
 HSV_GREEN_LOWER = np.array([50, 130, 65])
 HSV_GREEN_UPPER = np.array([120, 255, 255])
 
-cap = cv2.VideoCapture("yellow.mov");
+cap = cv2.VideoCapture(1);
 
 # 연속으로 인식해야 메세지 쏴준다.
 ACCURACY_COUNT = 10

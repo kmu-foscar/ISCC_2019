@@ -119,7 +119,7 @@ bool operator<(geometry_msgs::Point A, geometry_msgs::Point B) {
 
 void set_path() {
     std::string HOME = std::getenv("HOME") ? std::getenv("HOME") : ".";
-    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path2.txt");
+    std::ifstream infile(HOME+"/ISCC_2019/src/race/src/path/final_path_real.txt");
     std::string line;
 
     float min_dis = 9999999;
@@ -148,8 +148,8 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr& msg) {
 
 
 void odom_front_callback(const nav_msgs::Odometry::ConstPtr& odom) {
-    current_position.x = odom->pose.pose.position.x;
-    current_position.y = odom->pose.pose.position.y;
+    current_position.x = odom->pose.pose.position.x-0.7;
+    current_position.y = odom->pose.pose.position.y-0.3;
     front_heading = odom->pose.pose.position.z;
 
     double minimum_dist = 9999999;
@@ -301,7 +301,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
             }
             std::cout << "nearest_idx : " << nearest_idx << std::endl;
             current_path_index = nearest_idx;
-            mode = BASE_WITH_LANE_DETECTION;
+            mode = BASE_WITHOUT_LANE_DETECTION;
         }
         drive_msg.throttle = throttle;
         drive_msg.steering = steering;
@@ -324,7 +324,7 @@ void obstacle_callback(const obstacle_detector::Obstacles::ConstPtr& obstacles_m
         }
         if(dynamic_obstacle_flag == true && obstacles.size() == 0) {
         	if(dynamc_obstacle_cnt == 30) {
-        		mode = BASE_WITH_LANE_DETECTION;
+        		mode = BASE_WITHOUT_LANE_DETECTION;
             	throttle = 5;
             	std::cout << "finish" << std::endl;	
         	} else {

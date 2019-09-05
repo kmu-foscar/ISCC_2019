@@ -6,7 +6,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Int8
 from os.path import expanduser
 
-file_directory = expanduser("~/ISCC_2019/src/race/src/path/final_path2.txt")
+file_directory = expanduser("~/ISCC_2019/src/race/src/path/final_path_real_123.txt")
 
 
 location = []
