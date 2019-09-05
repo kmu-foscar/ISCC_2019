@@ -72,7 +72,7 @@ def auto_drive(steer):
     # print('speed: ', car_run_speed)
 
 def main():
-    # rospy.init_node('lane_detector_goni_node')
+    rospy.init_node('lane_detector_goni_node')
     # cap = cv2.VideoCapture("FINAL.avi")
     # cap = cv2.VideoCapture("FINAL2.avi")
     # cap = cv2.VideoCapture("FINAL5.avi")

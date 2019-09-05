@@ -188,6 +188,6 @@ while True:
 
     cv2.imshow("frame", frame)
 
-    cv2.waitKey(0)
-    # if cv2.waitKey(1) == 27:
-        # break;
+    # cv2.waitKey(0)
+    if cv2.waitKey(1) == 27:
+        break;
